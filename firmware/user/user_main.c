@@ -72,10 +72,11 @@ void ICACHE_FLASH_ATTR user_rf_pre_init(void)
 void ICACHE_FLASH_ATTR user_init(void)
 {
 	uart_init(BIT_RATE_115200,BIT_RATE_115200);
+	spi_master_init();
+	spi_cs_up();
+	//
 	os_printf("\nSDK version:%s\n", system_get_sdk_version());
-	os_printf("------------------start------------------\n\r");
-	set_data();
-	spi_master_init(HSPI);
-	spi_mast_byte_write(HSPI,0xAA);
-	os_printf("------------------done!------------------\n\r");
+	//
+	max7219_send_test(true);
+	//
 }

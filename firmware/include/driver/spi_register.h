@@ -117,6 +117,13 @@
 #define SPI_CS0_DIS (BIT(0))
 #define SPI_CS_DIS (BIT(30))
 
+#define SPI_WR_STATUS(i)                          (REG_SPI_BASE(i)  + 0x28)
+#define SPI_PIN(i)                            (REG_SPI_BASE(i)  + 0x2C)
+#define SPI_IDLE_EDGE (BIT(29))
+#define SPI_CS2_DIS (BIT(2))
+#define SPI_CS1_DIS (BIT(1))
+#define SPI_CS0_DIS (BIT(0))
+
 
 #define SPI_SLAVE(i)                          (REG_SPI_BASE(i)  + 0x30)
 #define SPI_SYNC_RESET (BIT(31))
