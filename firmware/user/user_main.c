@@ -73,10 +73,20 @@ void ICACHE_FLASH_ATTR user_init(void)
 {
 	uart_init(BIT_RATE_115200,BIT_RATE_115200);
 	spi_master_init();
-	spi_cs_up();
 	//
 	os_printf("\nSDK version:%s\n", system_get_sdk_version());
 	//
-	max7219_send_test(true);
+
+	//
+	//os_delay_us(60000);
+	//max7219_send_test(false);
+	//max7219_send_intensity(0x1);
+	max7219_send_test(false);
+	max7219_send_shutdown(false);
+	//
+	uint8_t videobuffer[48];
+	memset(videobuffer, 0, 48);
+	videobuffer[0] = 1;
+	max7219_send_videobuffer(videobuffer);
 	//
 }

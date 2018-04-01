@@ -21,6 +21,8 @@ typedef enum
 void spi_master_init();
 
 //use spi send 16bit data
-void spi_mast_byte_write(uint16 data);
+void spi_send_max7219_command(uint16 data);
+
+void spi_send_max7219_data(uint16* data);
 
 
