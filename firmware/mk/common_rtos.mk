@@ -28,7 +28,7 @@ else
     endif
 endif
 
-ifeq ($(SPI_SPEED), 26.7)
+ifeq ($(SPI_SPEED), 26)
     freqdiv = 1
     flashimageoptions = -ff 26m
 else
@@ -69,12 +69,12 @@ addr = 0x01000
 ifeq ($(SPI_SIZE_MAP), 1)
   size_map = 1
   flash = 256
-  flashimageoptions += -fs 2m
+  flashimageoptions += -fs 256KB
 else
   ifeq ($(SPI_SIZE_MAP), 2)
     size_map = 2
     flash = 1024
-    flashimageoptions += -fs 8m
+    flashimageoptions += -fs 1MB
     ifeq ($(app), 2)
       addr = 0x81000
     endif
@@ -82,7 +82,7 @@ else
     ifeq ($(SPI_SIZE_MAP), 3)
       size_map = 3
       flash = 2048
-      flashimageoptions += -fs 16m
+      flashimageoptions += -fs 2MB
       ifeq ($(app), 2)
         addr = 0x81000
       endif
@@ -90,7 +90,7 @@ else
       ifeq ($(SPI_SIZE_MAP), 4)
 	size_map = 4
 	flash = 4096
-	flashimageoptions += -fs 32m
+	flashimageoptions += -fs 4MB
         ifeq ($(app), 2)
           addr = 0x81000
         endif
@@ -98,7 +98,7 @@ else
         ifeq ($(SPI_SIZE_MAP), 5)
           size_map = 5
           flash = 2048
-          flashimageoptions += -fs 16m
+          flashimageoptions += -fs 2MB-c1
           ifeq ($(app), 2)
             addr = 0x101000
           endif
@@ -106,16 +106,34 @@ else
           ifeq ($(SPI_SIZE_MAP), 6)
             size_map = 6
             flash = 4096
-            flashimageoptions += -fs 32m
+            flashimageoptions += -fs 4MB-c1
             ifeq ($(app), 2)
               addr = 0x101000
             endif
           else
-            size_map = 0
-            flash = 512
-            flashimageoptions += -fs 4m
-            ifeq ($(app), 2)
-              addr = 0x41000
+            ifeq ($(SPI_SIZE_MAP), 8)
+              size_map = 8
+              flash = 8192
+              flashimageoptions += -fs 8MB
+              ifeq ($(app), 2)
+                addr = 0x101000
+              endif
+            else
+              ifeq ($(SPI_SIZE_MAP), 9)
+                size_map = 9
+                flash = 16384
+                flashimageoptions += -fs 16MB
+                ifeq ($(app), 2)
+                  addr = 0x101000
+                endif
+              else
+                size_map = 0
+                flash = 512
+                flashimageoptions += -fs 512KB
+                ifeq ($(app), 2)
+                addr = 0x41000
+                endif
+              endif
             endif
           endif
         endif
@@ -127,8 +145,45 @@ endif
 EXTRA_INCDIR = include
 
 # compiler flags using during compilation of source files
-CFLAGS		= -Os -g -O2 -std=gnu90 -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -mno-serialize-volatile -D__ets__ -DICACHE_FLASH
-CXXFLAGS	= -Os -g -O2 -Wpointer-arith -Wundef -Werror -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -mno-serialize-volatile -D__ets__ -DICACHE_FLASH -fno-rtti -fno-exceptions
+CFLAGS += 			\
+	-Os			\
+	-O2			\
+	-std=gnu90		\
+	-g			\
+	-Wpointer-arith		\
+	-Wundef			\
+	-Werror			\
+	-Wl,-EL			\
+	-fno-inline-functions	\
+	-nostdlib		\
+	-mlongcalls		\
+	-mtext-section-literals \
+	-ffunction-sections	\
+	-fdata-sections		\
+	-fno-builtin-printf	\
+#	-Wall			\
+	-fno-jump-tables
+
+CXXFLAGS +=			\
+	-Os			\
+	-O2			\
+	-std=gnu90		\
+	-g			\
+	-Wpointer-arith		\
+	-Wundef			\
+	-Werror			\
+	-Wl,-EL			\
+	-fno-inline-functions	\
+	-nostdlib		\
+	-mlongcalls		\
+	-mtext-section-literals \
+	-ffunction-sections	\
+	-fdata-sections		\
+	-fno-builtin-printf	\
+	-fno-jump-tables	\
+#	-Wall			\
+	-fno-rtti		\
+	-fno-exceptions
 
 # linker flags used to generate the main object file
 LDFLAGS		= -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static
@@ -138,7 +193,7 @@ LD_SCRIPT	= eagle.app.v6.ld
 
 ifneq ($(boot), none)
 ifneq ($(app),0)
-    ifeq ($(size_map), 6)
+    ifneq ($(findstring $(size_map),  6  8  9),)
       LD_SCRIPT = eagle.app.v6.$(boot).2048.ld
     else
       ifeq ($(size_map), 5)
@@ -171,7 +226,7 @@ endif
 # various paths from the SDK used in this project
 SDK_LIBDIR	= lib
 SDK_LDDIR	= ld
-SDK_INCDIR	= extra_include include include/espressif include/json include/udhcp include/lwip include/lwip/lwip include/lwip/ipv4 include/lwip/ipv6
+SDK_INCDIR	= extra_include include driver_lib/include include/espressif include/lwip include/lwip/ipv4 include/lwip/ipv6 include/nopoll include/spiffs include/ssl include/json include/openssl
 
 # select which tools to use as compiler, librarian and linker
 CC		:= $(XTENSA_TOOLS_ROOT)/xtensa-lx106-elf-gcc
@@ -217,9 +272,35 @@ define compile-objects
 $1/%.o: %.c
 	$(vecho) "CC $$<"
 	$(Q) $(CC) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CFLAGS)  -c $$< -o $$@
+$1/%.d: %.c
+	$(vecho) "DEPEND: $(CC) -M $(CFLAGS) $$<"
+	@set -e; rm -f $$@; \
+	$(Q) $(CC) -M $(CFLAGS) $$< > $$@.$$$$; \
+	sed 's,\($*\.o\)[ :]*,1 $$@ : ,g' < $$@.$$$$ > $$@; \
+	rm -f $$@.$$$$
 $1/%.o: %.cpp
 	$(vecho) "C+ $$<"
 	$(Q) $(CXX) $(INCDIR) $(MODULE_INCDIR) $(EXTRA_INCDIR) $(SDK_INCDIR) $(CXXFLAGS)  -c $$< -o $$@
+$1/%.d: %.cpp
+	$(vecho) "DEPEND: $(CPP) -M $(CFLAGS) $$<"
+	@set -e; rm -f $$@; \
+	$(Q) $(CPP) -M $(CFLAGS) $$< > $$@.$$$$; \
+	sed 's,\($*\.o\)[ :]*,1 $$@ : ,g' < $$@.$$$$ > $$@; \
+	rm -f $$@.$$$$
+$1/%.o: %.s
+	$(Q) $(CC) $(CFLAGS) -o $$@ -c $$<
+$1/%.d: %.s
+	set -e; rm -f $$@; \
+	$(Q) $(CC) -M $(CFLAGS) $$< > $$@.$$$$; \
+	sed 's,\($*\.o\)[ :]*,1 $$@ : ,g' < $$@.$$$$ > $$@; \
+	rm -f $$@.$$$$
+$1/%.o: %.S
+	$(Q) $(CC) $(CFLAGS) -D__ASSEMBLER__ -o $$@ -c $$<
+$1/%.d: %.S
+	set -e; rm -f $$@; \
+	$(Q) $(CC) -M $(CFLAGS) $$< > $$@.$$$$; \
+	sed 's,\($*\.o\)[ :]*,1 $$@ : ,g' < $$@.$$$$ > $$@; \
+	rm -f $$@.$$$$
 endef
 
 .PHONY: all checkdirs clean flash flashboot flashinit rebuild
@@ -244,21 +325,17 @@ ifeq ($(app), 0)
 	$(vecho) "No boot needed."
 	$(vecho) "Generate eagle.flash.bin and eagle.irom0text.bin successully in folder $(FW_BASE)"
 	$(vecho) "eagle.flash.bin-------->0x00000"
-	$(vecho) "eagle.irom0text.bin---->0x10000"
+	$(vecho) "eagle.irom0text.bin---->0x20000"
 else
     ifneq ($(boot), new)
 	$(Q) $(SDK_TOOLS)/gen_appbin.exe $@ 1 $(mode) $(freqdiv) $(size_map) $(app)
-	$(vecho) "Support boot_v1.1 and +"
+	$(vecho) "Support boot_v1.6 and +"
     else
 	$(Q) $(SDK_TOOLS)/gen_appbin.exe $@ 2 $(mode) $(freqdiv) $(size_map) $(app)
-    	ifeq ($(size_map), 6)
-		$(vecho) "Support boot_v1.4 and +"
+    	ifneq ($(findstring $(size_map),  6  8  9),)
+		$(vecho) "Support boot_v1.7 and +"
         else
-            ifeq ($(size_map), 5)
-		$(vecho) "Support boot_v1.4 and +"
-            else
-		$(vecho) "Support boot_v1.2 and +"
-            endif
+		$(vecho) "Support boot_v1.6 and +"
         endif
     endif
 	$(Q) mv eagle.app.flash.bin $(FW_BASE)/upgrade/$(BIN_NAME).bin
@@ -287,30 +364,25 @@ ifeq ($(app), 0)
 	$(vecho) "No boot needed."
 else
     ifneq ($(boot), new)
-	$(vecho) "Flash boot_v1.1 and +"
-	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.1.bin
+	$(vecho) "Flash boot_v1.6 and +"
+	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.6.bin
     else
-    	ifeq ($(size_map), 6)
-		$(vecho) "Flash boot_v1.5 and +"
-		$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.6.bin
+    	ifneq ($(findstring $(size_map),  6  8  9),)
+		$(vecho) "Flash boot_v1.7 and +"
+		$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.7.bin
         else
-            ifeq ($(size_map), 5)
-		$(vecho) "Flash boot_v1.5 and +"
+		$(vecho) "Flash boot_v1.6 and +"
 		$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.6.bin
-            else
-		$(vecho) "Flash boot_v1.2 and +"
-		$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.2.bin
-            endif
         endif
     endif
 endif
 
 flash: all
 ifeq ($(app), 0) 
-	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(FW_BASE)/eagle.flash.bin 0x10000 $(FW_BASE)/eagle.irom0text.bin
+	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(FW_BASE)/eagle.flash.bin 0x20000 $(FW_BASE)/eagle.irom0text.bin
 else
 ifeq ($(boot), none)
-	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(FW_BASE)/eagle.flash.bin 0x10000 $(FW_BASE)/eagle.irom0text.bin
+	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(FW_BASE)/eagle.flash.bin 0x20000 $(FW_BASE)/eagle.irom0text.bin
 else
 	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) $(addr) $(FW_BASE)/upgrade/$(BIN_NAME).bin
 endif

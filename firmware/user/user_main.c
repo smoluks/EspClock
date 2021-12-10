@@ -13,6 +13,9 @@
 #include "driver\spi.h"
 #include "user_interface.h"
 #include "driver/uart.h"
+#include "hw_timer.c"
+
+static ETSTimer WiFiLinker; //timer struct
 
 /******************************************************************************
  * FunctionName : user_rf_cal_sector_set
@@ -59,34 +62,48 @@ uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-//spi_byte_write_espslave(HSPI,0xAA);
-//spi_WR_espslave(HSPI);
-//SET_PERI_REG_MASK(SPI_PIN(SPI), SPI_CS_DIS);
-//CLEAR_PERI_REG_MASK(SPI_PIN(SPI), SPI_CS_DIS)
-
 void ICACHE_FLASH_ATTR user_rf_pre_init(void)
 {
 
 }
 
-void ICACHE_FLASH_ATTR user_init(void)
+void ICACHE_FLASH_ATTR work(void *arg)
 {
-	uart_init(BIT_RATE_115200,BIT_RATE_115200);
-	spi_master_init();
+	os_timer_disarm(&WiFiLinker);
 	//
-	os_printf("\nSDK version:%s\n", system_get_sdk_version());
+	while(true)
+	{
+		max7219_send_test(true);
+	}
+	//max7219_send_shutdown(false);
 	//
+	//uint8_t videobuffer[48];
+	//memset(videobuffer, 0, 48);
+	//videobuffer[0] = 1;
+	//max7219_send_videobuffer(videobuffer);
+	//
+}
 
-	//
-	//os_delay_us(60000);
-	//max7219_send_test(false);
-	//max7219_send_intensity(0x1);
-	max7219_send_test(false);
-	max7219_send_shutdown(false);
-	//
-	uint8_t videobuffer[48];
-	memset(videobuffer, 0, 48);
-	videobuffer[0] = 1;
-	max7219_send_videobuffer(videobuffer);
-	//
+void	hw_test_timer_cb(void)
+{
+}
+
+void ICACHE_FLASH_ATTR init_done(void) {
+#ifdef DEBUG
+	os_printf("\nSDK version:%s\n", system_get_sdk_version());
+#endif
+	os_timer_disarm(&WiFiLinker);
+	os_timer_setfn(&WiFiLinker, (os_timer_func_t *) work, NULL);
+	os_timer_arm(&WiFiLinker, 1000, 0);
+}
+
+void ICACHE_FLASH_ATTR user_init(void) {
+	spi_master_init();
+	wifi_set_opmode(NULL_MODE);
+
+	hw_timer_init(FRC1_SOURCE,1);
+	hw_timer_set_func(hw_test_timer_cb);
+	hw_timer_arm(100);
+
+	system_init_done_cb(init_done);
 }

@@ -28,7 +28,7 @@ else
     endif
 endif
 
-ifeq ($(SPI_SPEED), 26.7)
+ifeq ($(SPI_SPEED), 26)
     freqdiv = 1
     flashimageoptions = -ff 26m
 else
@@ -69,12 +69,12 @@ addr = 0x01000
 ifeq ($(SPI_SIZE_MAP), 1)
   size_map = 1
   flash = 256
-  flashimageoptions += -fs 2m
+  flashimageoptions += -fs 256KB
 else
   ifeq ($(SPI_SIZE_MAP), 2)
     size_map = 2
     flash = 1024
-    flashimageoptions += -fs 8m
+    flashimageoptions += -fs 1MB
     ifeq ($(app), 2)
       addr = 0x81000
     endif
@@ -82,7 +82,7 @@ else
     ifeq ($(SPI_SIZE_MAP), 3)
       size_map = 3
       flash = 2048
-      flashimageoptions += -fs 16m
+      flashimageoptions += -fs 2MB
       ifeq ($(app), 2)
         addr = 0x81000
       endif
@@ -90,7 +90,7 @@ else
       ifeq ($(SPI_SIZE_MAP), 4)
 	size_map = 4
 	flash = 4096
-	flashimageoptions += -fs 32m
+	flashimageoptions += -fs 4MB
         ifeq ($(app), 2)
           addr = 0x81000
         endif
@@ -98,7 +98,7 @@ else
         ifeq ($(SPI_SIZE_MAP), 5)
           size_map = 5
           flash = 2048
-          flashimageoptions += -fs 16m
+          flashimageoptions += -fs 2MB-c1
           ifeq ($(app), 2)
             addr = 0x101000
           endif
@@ -106,16 +106,34 @@ else
           ifeq ($(SPI_SIZE_MAP), 6)
             size_map = 6
             flash = 4096
-            flashimageoptions += -fs 32m
+            flashimageoptions += -fs 4MB-c1
             ifeq ($(app), 2)
               addr = 0x101000
             endif
           else
-            size_map = 0
-            flash = 512
-            flashimageoptions += -fs 4m
-            ifeq ($(app), 2)
-              addr = 0x41000
+            ifeq ($(SPI_SIZE_MAP), 8)
+              size_map = 8
+              flash = 8192
+              flashimageoptions += -fs 8MB
+              ifeq ($(app), 2)
+                addr = 0x101000
+              endif
+            else
+              ifeq ($(SPI_SIZE_MAP), 9)
+                size_map = 9
+                flash = 16384
+                flashimageoptions += -fs 16MB
+                ifeq ($(app), 2)
+                  addr = 0x101000
+                endif
+              else
+                size_map = 0
+                flash = 512
+                flashimageoptions += -fs 512KB
+                ifeq ($(app), 2)
+                addr = 0x41000
+                endif
+              endif
             endif
           endif
         endif
@@ -138,7 +156,7 @@ LD_SCRIPT	= eagle.app.v6.cpp.ld
 
 ifneq ($(boot), none)
 ifneq ($(app),0)
-    ifeq ($(size_map), 6)
+    ifneq ($(findstring $(size_map),  6  8  9),)
       LD_SCRIPT = eagle.app.v6.$(boot).2048.cpp.ld
     else
       ifeq ($(size_map), 5)
@@ -251,7 +269,7 @@ else
 	$(vecho) "Support boot_v1.1 and +"
     else
 	$(Q) $(SDK_TOOLS)/gen_appbin.exe $@ 2 $(mode) $(freqdiv) $(size_map) $(app)
-    	ifeq ($(size_map), 6)
+    	ifneq ($(findstring $(size_map),  6  8  9),)
 		$(vecho) "Support boot_v1.4 and +"
         else
             ifeq ($(size_map), 5)
@@ -290,7 +308,7 @@ else
 	$(vecho) "Flash boot_v1.1 and +"
 	$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.1.bin
     else
-    	ifeq ($(size_map), 6)
+    	ifneq ($(findstring $(size_map),  6  8  9),)
 		$(vecho) "Flash boot_v1.5 and +"
 		$(ESPTOOL) -p $(ESPPORT) -b $(ESPBAUD) write_flash $(flashimageoptions) 0x00000 $(SDK_BASE)/bin/boot_v1.6.bin
         else
