@@ -1,0 +1,7 @@
+{
+    "output": "build",
+    "port": "COM6",
+    "configuration": "JTAGAdapter=default,PSRAM=disabled,PartitionScheme=app3M_fat9M_16MB,CPUFreq=240,FlashMode=qio,FlashFreq=80,FlashSize=16M,UploadSpeed=921600,LoopCore=0,EventsCore=1,DebugLevel=info,EraseFlash=none",
+    "board": "esp32:esp32:esp32",
+    "sketch": "firmware.ino"
+}
