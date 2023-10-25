@@ -27,8 +27,15 @@ void screen_clock_init()
 }
 
 uint8_t oldMinute = 255;
+unsigned long ms_previous = 0;
 void screen_clock_process()
 {
+    if(millis() - ms_previous < 1000)
+    {
+        return;
+    }    
+    ms_previous = millis();
+
     ds3231RefreshTime();
     
     moveCursor();

@@ -28,7 +28,7 @@ void hub75_init()
 
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
-  dma_display->setBrightness8(50); // 0-255
+  dma_display->setBrightness8(3); // 0-255
 
   dma_display->fillScreenRGB888(128, 0, 0);
   delay(500);
@@ -43,6 +43,12 @@ void hub75_init()
   ESP_LOGI("hub75", "HUB75 init completed");
 }
 
-void hub75_loop()
+void hub75_set_brigthness(uint8_t brightness)
 {
+  if(brightness < 3)
+  {
+    brightness = 3;
+  }
+  
+  dma_display->setBrightness8(brightness);
 }

@@ -1,8 +1,8 @@
 #include "hardware/hub75.hpp"
 #include "hardware/hub75.cpp"
-#include "hardware/ds3231.hpp"
 #include "hardware/ds3231.cpp"
 #include "hardware/FUSB302.cpp"
+#include "hardware/light.cpp"
 #include "screens/clock.hpp"
 #include "screens/clock.cpp"
 #include "screens/clock.hpp"
@@ -14,11 +14,11 @@ void setup()
   Serial.begin(115200);
   Serial.setDebugOutput(true);
 
-  FUSB302_init();
-
   hub75_init();
 
   ds3231Init();
+
+  FUSB302_init();
 
   screen_clock_init();
   
@@ -27,11 +27,11 @@ void setup()
 
 void loop()
 {
-  ESP_LOGI("main", "Loop");
+  //ESP_LOGI("main", "Loop");
 
   FUSB302_loop();
 
   screen_clock_process();
 
-  delay(1000);
+  light_loop();
 }
