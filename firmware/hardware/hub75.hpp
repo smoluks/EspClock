@@ -31,5 +31,5 @@
 #define YELLOW565   0xFFE0 
 #define WHITE565    0xFFFF
 
-void hub75_init();
+void Hub75Init();
 void hub75_loop();

@@ -21,7 +21,7 @@ HUB75_I2S_CFG mxconfig(
 
 MatrixPanel_I2S_DMA* dma_display = nullptr;
 
-void hub75_init()
+void Hub75Init()
 {
   /************** DISPLAY **************/
   ESP_LOGI("hub75", "HUB75 init started");
@@ -45,9 +45,9 @@ void hub75_init()
 
 void hub75_set_brigthness(uint8_t brightness)
 {
-  if(brightness < 3)
+  if(brightness < 5)
   {
-    brightness = 3;
+    brightness = 5;
   }
   
   dma_display->setBrightness8(brightness);

@@ -5,7 +5,7 @@
 PD_UFP_c PD_UFP;
 //PD_UPD_UFP_log_c PD_UFP;
 
-void FUSB302_init()
+void FUSB302Init()
 {
     PD_UFP.init(FUSB302_INT_PIN, PD_POWER_OPTION_MAX_12V);
     

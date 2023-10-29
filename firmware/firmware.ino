@@ -2,10 +2,12 @@
 #include "hardware/hub75.cpp"
 #include "hardware/ds3231.cpp"
 #include "hardware/FUSB302.cpp"
+#include "hardware/bme280.cpp"
 #include "hardware/light.cpp"
+#include "hardware/T6703.cpp"
 #include "screens/clock.hpp"
 #include "screens/clock.cpp"
-#include "screens/clock.hpp"
+#include "screens/temperature.cpp"
 
 void setup()
 {
@@ -14,12 +16,16 @@ void setup()
   Serial.begin(115200);
   Serial.setDebugOutput(true);
 
-  hub75_init();
+  Hub75Init();
 
-  ds3231Init();
+  DS3231Init();
 
-  FUSB302_init();
+  FUSB302Init();
 
+  BME280Init();
+
+  T6703Init();
+  
   screen_clock_init();
   
   ESP_LOGI("main", "Init complete");
