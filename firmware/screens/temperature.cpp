@@ -1,5 +1,5 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include "../hardware/hub75.hpp"
+#include "../hardware/h/hub75.hpp"
 
 unsigned long temp_show_timestamp = 0;
 

@@ -1,10 +1,12 @@
-#include "hardware/hub75.hpp"
+#include "hardware/h/hub75.hpp"
 #include "hardware/hub75.cpp"
 #include "hardware/ds3231.cpp"
 #include "hardware/FUSB302.cpp"
 #include "hardware/bme280.cpp"
 #include "hardware/light.cpp"
 #include "hardware/T6703.cpp"
+#include "hardware/i2c.cpp"
+#include "hardware/wifi.cpp"
 #include "screens/clock.hpp"
 #include "screens/clock.cpp"
 #include "screens/temperature.cpp"
@@ -17,6 +19,8 @@ void setup()
   Serial.setDebugOutput(true);
 
   Hub75Init();
+
+  I2CInit();
 
   DS3231Init();
 
@@ -40,4 +44,8 @@ void loop()
   screen_clock_process();
 
   light_loop();
+
+  T6703Loop();
+  
+  WIFIProcess();
 }
