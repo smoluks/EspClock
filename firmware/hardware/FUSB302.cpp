@@ -25,6 +25,8 @@ void FUSB302Init()
     }
     while (PD_UFP.get_ps_status() == STATUS_POWER_NA && millis() - timestamp < 1000);
 
+    Hub75MoveLoadingBar();
+    
     ESP_LOGI("FUSB302", "PD init finished with status: %d at %d ms", PD_UFP.get_ps_status(), millis() - timestamp);    
 }
 

@@ -31,5 +31,10 @@
 #define YELLOW565   0xFFE0 
 #define WHITE565    0xFFFF
 
+//minimal correctly displaying brightness
+#define MIN_BRIGHTNESS 5
+
 void Hub75Init();
-void hub75_loop();
+void Hub75MoveLoadingBar();
+void Hub75TestScreen();
+void Hub75SetBrigthness(uint8_t brightness);

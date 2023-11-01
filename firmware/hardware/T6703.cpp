@@ -25,6 +25,8 @@ void T6703Init()
     }
 
     URTCLIB_WIRE.setClock(400000);
+
+    Hub75MoveLoadingBar();
 }
 
 void T6703Loop()

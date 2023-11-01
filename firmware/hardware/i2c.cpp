@@ -6,4 +6,6 @@ void I2CInit()
     {
         Serial.print("I2C init error");
     }
+
+    Hub75MoveLoadingBar();
 }

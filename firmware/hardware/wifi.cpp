@@ -34,9 +34,9 @@ void WIFIProcess()
             timeClient.setTimeOffset(3600);
             if(timeClient.update())
             {
-                ESP_LOGI("WiFi", "NTP time: %s", timeClient.getFormattedTime());
+                ESP_LOGI("WiFi", "NTP time: %d", timeClient.getEpochTime());
 
-                ds3231SetTime(timeClient.getEpochTime());
+                DS3231SetTime(timeClient.getEpochTime());
             }     
         }
         break;

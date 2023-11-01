@@ -1,6 +1,6 @@
 #include <Adafruit_BME280.h>
-
-#define SEALEVELPRESSURE_HPA (1013.25)
+#include "h/bme280.hpp"
+#include "h/hub75.hpp"
 
 Adafruit_BME280 bme;
 
@@ -12,7 +12,9 @@ void BME280Init()
     {
         ESP_LOGW("BME280", "BME280 init error");
     }
-
+    
+    Hub75MoveLoadingBar();
+    
     ESP_LOGI("BME280", "BME280 init finished");
 }
 

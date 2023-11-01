@@ -1,5 +1,6 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include "../hardware/h/hub75.hpp"
+#include "../hardware/h/ds3231.hpp"
 
 void moveCursor();
 
@@ -36,17 +37,17 @@ void screen_clock_process()
     }    
     ms_previous = millis();
 
-    ds3231RefreshTime();
+    DS3231RefreshTime();
     
     moveCursor();
 
     dma_display->fillScreenRGB888(0, 0, 0);
     
-    dma_display->print(getHour() / 10);
-    dma_display->print(getHour() % 10);
+    dma_display->print(DS3231GetHour() / 10);
+    dma_display->print(DS3231GetHour() % 10);
     dma_display->print(':');
-    dma_display->print(getMinute() / 10);
-    dma_display->print(getMinute() % 10);
+    dma_display->print(DS3231GetMinute() / 10);
+    dma_display->print(DS3231GetMinute() % 10);
 }
 
 void moveCursor()

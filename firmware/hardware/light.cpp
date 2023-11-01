@@ -1,3 +1,5 @@
+#include "h/hub75.hpp"
+
 #define LIGHT_ANALOG_PIN 34
 
 void light_loop()
@@ -8,7 +10,7 @@ void light_loop()
     if(raw > 1200)
         value = (raw - 1200) / 64;
 
-    hub75_set_brigthness(value > 255 ? 255 : value);
+    Hub75SetBrigthness(value > 255 ? 255 : value);
 
     //ESP_LOGI("light", "value: %d", value);
 }
