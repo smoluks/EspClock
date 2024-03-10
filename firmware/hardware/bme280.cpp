@@ -1,39 +1,40 @@
-#include <Adafruit_BME280.h>
-#include "h/bme280.hpp"
-#include "h/hub75.hpp"
+#include "SparkFunBME280.h"
+#include "../managers/h/errorManager.hpp"
 
-Adafruit_BME280 bme;
+BME280_SensorMeasurements measurements;
+bool BME280_ready;
+
+BME280 _mySensor;
 
 void BME280Init()
 {
-    ESP_LOGI("BME280", "BME280 init started");
+    ESP_LOGI("BM*280", "BM*280 init started");
 
-    if (!bme.begin())
+    uint8_t id = _mySensor.begin();
+    switch (id)
     {
-        ESP_LOGW("BME280", "BME280 init error");
-    }
-    
-    Hub75MoveLoadingBar();
-    
-    ESP_LOGI("BME280", "BME280 init finished");
+    case 0x58:
+        ESP_LOGI("BM*280", "BMP280 found");
+        break;
+    case 0x60:
+        ESP_LOGI("BM*280", "BME280 found");
+        break;
+    default:
+        setError(ERROR_BME280_NOT_FOUND);
+        ESP_LOGE("BM*280", "Unknown chip, id = 0x%X", id);
+    }    
+
+    _mySensor.setReferencePressure(101200);
+
+    ESP_LOGI("BM*280", "BM*280 init finished");
 }
 
-float BME280GetTemperature()
+void BME280Loop()
 {
-    return bme.readTemperature();
-}
+    if (_mySensor.isMeasuring())
+        return;
 
-float BME280GetPressure()
-{
-    return bme.readPressure() / 100.0F;
-}
+    _mySensor.readAllMeasurements(&measurements);
 
-float BME280GetAltitude()
-{
-    return bme.readAltitude(SEALEVELPRESSURE_HPA);
-}
-
-float BME280GetHumidity()
-{
-    return bme.readHumidity();
+    BME280_ready = true;
 }

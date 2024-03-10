@@ -92,10 +92,10 @@ class PatternInvadersMedium : public Drawable {
 
           if (random(0, 2) == 1) color = color1;
 
-          dma_display->fillRect(x + (i * 2), y + (j * 2), x + (i * 2 + 1), y + (j * 2 + 1), color);
+          dma_display->fillRect(x + (i * 2), y + (j * 2), x + (i * 2 + 1), y + (j * 2 + 1), CRGBToRGBParms(color));
 
           if (i < 2)
-            dma_display->fillRect(x + (8 - i * 2), y + (j * 2), x + (9 - i * 2), y + (j * 2 + 1), color);
+            dma_display->fillRect(x + (8 - i * 2), y + (j * 2), x + (9 - i * 2), y + (j * 2 + 1), CRGBToRGBParms(color));
         }
       }
 
@@ -138,10 +138,10 @@ class PatternInvadersLarge : public Drawable {
             color = color1;
           }
 
-          dma_display->fillRect(1 + x * 6, 1 + y * 6, 5 + x * 6, 5 + y * 6, color);
+          dma_display->fillRect(1 + x * 6, 1 + y * 6, 5 + x * 6, 5 + y * 6, CRGBToRGBParms(color));
 
           if (x < 2)
-            dma_display->fillRect(1 + (4 - x) * 6, 1 + y * 6, 5 + (4 - x) * 6, 5 + y * 6, color);
+            dma_display->fillRect(1 + (4 - x) * 6, 1 + y * 6, 5 + (4 - x) * 6, 5 + y * 6, CRGBToRGBParms(color));
         }
       }
 

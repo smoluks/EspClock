@@ -28,13 +28,15 @@
 #include "Vector.h"
 #include "Boid.h"
 #include "Attractor.h"
-
+#include "Drawable.h"
 /* 
  *  Note from mrfaptastic:
  *  
  *  Commented out patterns are due to the fact they either didn't work properly with a non-square display,
  *  or from my personal opinion, are crap. 
  */
+
+#define CRGBToRGBParms(color) color.r, color.g, color.b
 
 #include "PatternTest.h"
 //#include "PatternNoiseSmearing.h" // Doesn't seem to work, omitting.

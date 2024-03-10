@@ -1,16 +1,40 @@
+#include "../h/pinsMapping.hpp"
+#include "../h/settings.hpp"
 #include "h/hub75.hpp"
+#include "h/light.hpp"
 
-#define LIGHT_ANALOG_PIN 34
+extern settings_t settings;
 
-void light_loop()
+void lightInit()
 {
-    uint16_t raw = analogRead(LIGHT_ANALOG_PIN);
+    pinMode(LIGHT_ANALOG_PIN, ANALOG);
 
-    uint16_t value = 0;
-    if(raw > 1200)
-        value = (raw - 1200) / 64;
+    if(!settings.light_auto)
+    {
+        HUB75SetBrigthness(settings.light_level);
+    }
+}
 
-    Hub75SetBrigthness(value > 255 ? 255 : value);
+uint32_t raw = 0;
+uint16_t count = 0;
+void lightLoop()
+{
+    if(!settings.light_auto)
+    {
+        return;
+    }
+    
+    raw += analogRead(LIGHT_ANALOG_PIN);
+    if(++count < LIGHT_MEASURE_COUNT)
+    {
+        return;
+    }
+    count = 0;
+    
+    raw = raw / LIGHT_MEASURE_COUNT / 27;
+    //ESP_LOGI("light", "raw value: %d", raw);
 
-    //ESP_LOGI("light", "value: %d", value);
+    HUB75SetBrigthness(raw  > 255 ? 255: raw);
+     
+    raw = 0;
 }

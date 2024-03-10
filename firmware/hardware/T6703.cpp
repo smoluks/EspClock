@@ -1,77 +1,173 @@
 #include <T67XX.h>
+#include "h/i2c.hpp"
+#include "h/T6703.hpp"
+#include "../libs/pt-1.4/pt.h"
 
-enum T6703State_e
-{
-    T6703_IDLE,
-    T6703_INITIALISING,
-    T6703_INITIALISED
-} T6703State = T6703_IDLE;
+uint16_t t6703_value;
+bool t6703_ready;
+bool t6703_pt_finised;
 
-T67XX co2sensor;
-void T6703Init()
+PT_THREAD(T6703checkStatus());
+PT_THREAD(T6703read());
+
+inline void T6703Init()
 {
     ESP_LOGI("T6703", "T6703 init started");
 
-    URTCLIB_WIRE.setClock(100000);
+    I2CSetSpeed(100000);
 
-    if (!co2sensor.begin())
+    //-----Waiting status OK------
+    int32_t status;
+    bool is_resetted;
+    do
     {
-        ESP_LOGW("T6703", "T6703 init error");
-    }
-    else
-    {
-        T6703State = T6703_INITIALISING;
-        co2sensor.reset();
-    }
-
-    URTCLIB_WIRE.setClock(400000);
-
-    Hub75MoveLoadingBar();
-}
-
-void T6703Loop()
-{
-    switch (T6703State)
-    {
-    case T6703_INITIALISING:
-        URTCLIB_WIRE.setClock(100000);
-
-        uint16_t sensorStatus = co2sensor.getStatus();
-        if (!sensorStatus)
-        {
-            ESP_LOGI("T6703", "T6703 status: %d", sensorStatus);
+        status = ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_STATUS);
+        if(status == -1)
+        {     
+            //i2c operation failed
+            if(is_resetted)
+            {
+                I2CSetSpeed(400000);
+                t6703_pt_finised = true;
+                return;
+            }
+            else
+            {
+                ModbusOverI2CWriteSingleCoil(T67XX_I2C_ADDR, T67XX_REG_RESET, true);
+                delay(15);
+                is_resetted = true;
+            }
         }
-        else
-        {
-            co2sensor.setABCMode(true);
-            co2sensor.flashUpdate();
-            T6703State = T6703_INITIALISED;
+    } while (status < 0);
 
-            ESP_LOGI("T6703", "Sensor firmware version: %d", co2sensor.getFirmwareVersion());
-        }
+    //-----Setup sensor------
+    ModbusOverI2CWriteSingleCoil(T67XX_I2C_ADDR, T67XX_REG_ABC_LOGIC, true);
 
-        URTCLIB_WIRE.setClock(400000);
-        break;
-    }
+    //
+    ESP_LOGI("T6703", "T6703 init completed, firmware version: %d", ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_FIRMWARE));
+
+    I2CSetSpeed(400000);
 }
 
-bool T6703IsPresent()
+inline void T6703Loop()
 {
-    return T6703State == T6703_INITIALISED;
-}
+    if (t6703_pt_finised)
+        return;
 
-uint16_t T6703GetCO2()
-{
-    if (T6703State != T6703_INITIALISED)
+    if (T6703read() == PT_EXITED)
     {
-        return 0;
+        t6703_pt_finised = true;
+    }
+}
+
+struct pt t6703_read_pt;
+uint32_t t6703_read_timestamp;
+PT_THREAD(T6703read())
+{
+    uint8_t t6703_read_command[] = {0x04, byte(T67XX_REG_PPM >> 8), byte(T67XX_REG_PPM & 0xFF), 0x00, 0x01};
+    uint8_t t6703_answer[4];
+
+    PT_BEGIN(&t6703_read_pt);
+
+    //-----throttle-----
+    t6703_read_timestamp = millis();
+    PT_WAIT_WHILE(&t6703_read_pt, (millis() - t6703_read_timestamp) < T67XX_MEASURE_DELAY);
+
+    //-----Check status------
+    PT_WAIT_UNTIL(&t6703_read_pt, T6703checkStatus() == PT_EXITED);
+    ESP_LOGV("T6703", "T6703 status ok");
+
+    //-----write measure command-----
+    ESP_LOGV("T6703", "write measure command");
+
+    I2CSetSpeed(100000);
+
+    if (I2CWriteBulk(T67XX_I2C_ADDR, t6703_read_command, 5) != 5)
+    {
+        ESP_LOGW("T6703", "T6703 write co2 command failed");
+        I2CSetSpeed(400000);
+        PT_INIT(&t6703_read_pt);
+        return PT_WAITING;
     }
 
-    URTCLIB_WIRE.setClock(100000);
+    I2CSetSpeed(400000);
 
-    uint16_t result = co2sensor.readPPM();
+    //-----wait command processing-----
+    ESP_LOGV("T6703", "wait command processing");
 
-    URTCLIB_WIRE.setClock(400000);
+    t6703_read_timestamp = millis();
+    PT_WAIT_WHILE(&t6703_read_pt, (millis() - t6703_read_timestamp) < T67XX_READ_DELAY);
 
-    return result;
+    //-----read result-----
+    ESP_LOGV("T6703", "read result");
+
+    I2CSetSpeed(100000);
+
+    if (I2CReadBulk(T67XX_I2C_ADDR, t6703_answer, 4) != 4)
+    {
+        ESP_LOGW("T6703", "T6703 read co2 result failed");
+        I2CSetSpeed(400000);
+        PT_INIT(&t6703_read_pt);
+        return PT_WAITING;
+    }
+    t6703_value = ((t6703_answer[2] << 8) | t6703_answer[3]);
+    t6703_ready = true;
+
+    ESP_LOGV("T6703", "CO2 = %d ppm", co2);
+
+    I2CSetSpeed(400000);
+
+    PT_END(&t6703_read_pt);
 }
+
+struct pt t6703_status_pt;
+uint32_t t6703_status_timestamp;
+PT_THREAD(T6703checkStatus())
+{
+    uint8_t t6703_read_command[] = {0x04, byte(T67XX_REG_STATUS >> 8), byte(T67XX_REG_STATUS & 0xFF), 0x00, 0x01};
+    uint8_t t6703_answer[4];
+
+    PT_BEGIN(&t6703_status_pt);
+
+    //-----write read status command-----
+    ESP_LOGV("T6703", "write read status command");
+
+    I2CSetSpeed(100000);
+    if (I2CWriteBulk(T67XX_I2C_ADDR, t6703_read_command, 5) != 5)
+    {
+        ESP_LOGW("T6703", "T6703 write status command failed");
+        I2CSetSpeed(400000);
+        PT_INIT(&t6703_status_pt);
+        return PT_WAITING;
+    }
+    I2CSetSpeed(400000);
+
+    //-----wait command processing-----
+    ESP_LOGV("T6703", "wait command processing");
+
+    t6703_status_timestamp = millis();
+    PT_WAIT_WHILE(&t6703_status_pt, (millis() - t6703_status_timestamp) < T67XX_READ_DELAY);
+
+    //-----read result-----
+    ESP_LOGV("T6703", "read read status result");
+
+    I2CSetSpeed(100000);
+
+    if (I2CReadBulk(T67XX_I2C_ADDR, t6703_answer, 4) != 4)
+    {
+        ESP_LOGW("T6703", "T6703 read status result failed");
+        I2CSetSpeed(400000);
+        PT_INIT(&t6703_status_pt);
+        return PT_WAITING;
+    }
+    uint16_t status = ((t6703_answer[2] << 8) | t6703_answer[3]);
+    ESP_LOGV("T6703", "T6703 status = %d", status);
+
+    I2CSetSpeed(400000);
+
+    if (!status)
+        PT_EXIT(&t6703_status_pt);
+
+    PT_END(&t6703_status_pt);
+}
+

@@ -8,6 +8,29 @@
         "string_view": "cpp",
         "initializer_list": "cpp",
         "*.tcc": "cpp",
-        "list": "cpp"
-    }
+        "list": "cpp",
+        "functional": "cpp",
+        "optional": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "system_error": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "cmath": "cpp",
+        "algorithm": "cpp",
+        "atomic": "cpp",
+        "cstddef": "cpp",
+        "cstdio": "cpp",
+        "cstring": "cpp",
+        "cwchar": "cpp",
+        "memory": "cpp",
+        "memory_resource": "cpp",
+        "random": "cpp",
+        "fstream": "cpp",
+        "new": "cpp",
+        "stdexcept": "cpp",
+        "typeinfo": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }
