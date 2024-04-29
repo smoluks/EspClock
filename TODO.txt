@@ -1,14 +1,12 @@
-подписать + - у динамиков
-подписи джамперов
-пад у шунта расширить точки и пады 
-кнопка сброса настроек?
-переключатель USB, который торчит наружу!
+
 -----v2-----
-другой шим 3.3 для работы от аккума
-FM
-перенести дырку
-touch переработать
-USB hub
-отличать акум и дефолтный usb
-step-up для телайра
-фьюз и трансил на акк (защиту?)
+settings reset button
+investigate 5v step-down working up to 20v input
+add FM radio module? and audio switch?
+add usb hub and remove usb mode switch?
+
+accumulator feature:
+investigate 3.3v step-down working from 3.6V Li-Ion accumulator voltage
+investigate way to differ power from 3.6V Li-Ion accumulator and 5v non-power profile usb
+T6703 need step-up or power disable
+accumulator need fuse and possible protection 
