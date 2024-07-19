@@ -4,6 +4,7 @@ settings reset button
 investigate 5v step-down working up to 20v input
 add FM radio module? and audio switch?
 add usb hub and remove usb mode switch?
+timekeeper interrupt for reading new time
 
 accumulator feature:
 investigate 3.3v step-down working from 3.6V Li-Ion accumulator voltage

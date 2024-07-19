@@ -1,11 +1,12 @@
 #include <Wire.h>
 #include "h/i2c.hpp"
+#include "../h/hardware.hpp"
 
 bool I2CInit()
 {
-    if (!Wire.begin(21, 22, 400000))
+    if (!Wire.begin(SDA_PIN, SCL_PIN, 400000))
     {
-        Serial.print("I2C init error");
+        ESP_LOGE("I2C", "I2C init error");
         return false;
     }
 

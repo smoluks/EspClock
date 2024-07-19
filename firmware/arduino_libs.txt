@@ -1,0 +1,23 @@
+Board configuration:
+Selected Board: ESP32 Dev module (esp32) from: esp32 by Espressif Systems Version 2.0.11
+Arduino Runs On: Core 0
+Events Run On: Core 0
+Core Debug Level: Info - for logging over UART
+
+Libraries:
+SparkFun BME280 by Marshall Taylor Version 2.0.9 https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+NTPClient by Fabrice Weinberg Version 3.2.1 https://github.com/arduino-libraries/NTPClient  
+ESP32 HUB75 LED MATRIX PANEL DMA Display by Faptastic Version 3.0.10 https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA
+Adafruit GFX Library by Adafruit Version 1.11.9 https://github.com/adafruit/Adafruit-GFX-Library
+FastLED by Daniel Garcia Version 3.6.0  https://github.com/FastLED/FastLED
+ESPAsyncWebServer by lacamera Version 3.1.0  https://github.com/lacamera/ESPAsyncWebServer
+
+added using libs folder in the project folder:
+FUSB302 PD UFP sink by Kai Liebich Version 0.1.0 https://github.com/kcl93/fusb302_arduino
+A protothread is a low-overhead mechanism for concurrent programming https://dunkels.com/adam/pt/
+
+not used as library, by thanks to:
+CDFER for Captive-Portal-ESP32 https://github.com/CDFER/Captive-Portal-ESP32/tree/main
+SnijderC for Abstracted UART Control of DY-XXXX mp3 modules https://github.com/SnijderC/dyplayer
+MacLeod-D for ESP32 ADC result correction table generator https://github.com/MacLeod-D/ESP32-ADC
+drug123 for Telaire T6700 Series Miniature CO2 Sensor Modules library for Arduino https://github.com/drug123/T67XX

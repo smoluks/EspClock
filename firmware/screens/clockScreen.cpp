@@ -1,8 +1,8 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include "../hardware/h/hub75.hpp"
-#include "../hardware/h/ds3231.hpp"
-#include "../hardware/h/T6703.hpp"
 #include "../hardware/h/touch.hpp"
+#include "../controllers/h/clockController.hpp"
+#include "../controllers/h/co2Controller.hpp"
 #include "h/screenCommon.hpp"
 #include "h/clockScreen.hpp"
 
@@ -40,7 +40,7 @@ screen_action_t clockScreenLoop()
 
     dma_display->fillScreenRGB888(0, 0, 0);
 
-    if (!DS3231IsReady())
+    if (!IsTimePresent())
     {
         dma_display->setTextColor(GREEN565);
         dma_display->setTextSize(1);
@@ -48,7 +48,7 @@ screen_action_t clockScreenLoop()
     }
     else
     {
-        Time currentTime = DS3231GetTime();
+        DateTime currentTime = GetCurrentTime();
         const char time[6] = {
             0x30 + currentTime.hour / 10,
             0x30 + currentTime.hour % 10,
@@ -85,11 +85,11 @@ screen_action_t clockScreenLoop()
     }
 
     //-----CO2 Warning-----
-    if (isCO2Ready())
+    if (IsCO2Present())
     {
-        if (CO2Value() > 1000)
+        if (GetCO2Value() > 1000)
             dma_display->drawPixel(63, 0, RED565);
-        else if (CO2Value() > 750)
+        else if (GetCO2Value() > 750)
             dma_display->drawPixel(63, 0, ORANGE565);
     }
 

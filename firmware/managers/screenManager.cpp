@@ -63,12 +63,6 @@ void checkChangeConditions()
 
     if (isErrors())
         moveToScreen(errorScreen);
-
-    /*if(!IsFUSB302PDPresent())
-{
-  HUB75PCModeScreen();
-  for (;;);
-}*/
 }
 
 void moveToScreen(enum screens_e screen)

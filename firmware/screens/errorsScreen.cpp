@@ -1,5 +1,5 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include "../contollers/h/systickController.hpp"
+#include "../controllers/h/systickController.hpp"
 #include "../managers/h/errorManager.hpp"
 #include "../hardware/h/hub75.hpp"
 #include "h/screenCommon.hpp"
@@ -13,7 +13,7 @@ void errorScreenInit()
     dma_display->setTextColor(RED565);
     dma_display->setTextSize(1);
 
-    error_screen_show_timestamp = getTimestamp(-1);
+    error_screen_show_timestamp = GetTimestamp(-1);
 }
 
 screen_action_t errorScreenLoop()
@@ -21,9 +21,9 @@ screen_action_t errorScreenLoop()
     if(!isErrors())
         return SCREEN_ACTION_GO_TO_DEFAULT;
 
-    if (!isTimeout(error_screen_show_timestamp))
+    if (!IsTimeout(error_screen_show_timestamp))
         return SCREEN_ACTION_NOTHING;
-    error_screen_show_timestamp = getTimestamp(ERROR_SCREEN_REFRESH_PERIOD);
+    error_screen_show_timestamp = GetTimestamp(ERROR_SCREEN_REFRESH_PERIOD);
     
     dma_display->fillScreenRGB888(0, 0, 0);    
 

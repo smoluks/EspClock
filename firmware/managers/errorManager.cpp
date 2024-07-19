@@ -1,5 +1,4 @@
 #include "h/errorManager.hpp"
-#include "../h/errors.hpp"
 
 sys_error_t _errors[MAX_ERRORS_COUNT];
 uint8_t error_count = 0;

@@ -1,4 +1,4 @@
-#include "../h/pinsMapping.hpp"
+#include "../h/hardware.hpp"
 #include "../h/settings.hpp"
 #include "h/hub75.hpp"
 #include "h/light.hpp"
@@ -25,14 +25,15 @@ void lightLoop()
     }
     
     raw += analogRead(LIGHT_ANALOG_PIN);
-    if(++count < LIGHT_MEASURE_COUNT)
+    if(++count < 1 << LIGHT_MEASURE_COUNT_BIT)
     {
         return;
     }
-    count = 0;
-    
-    raw = raw / LIGHT_MEASURE_COUNT / 27;
+    count = 0;    
+    raw = raw >> LIGHT_MEASURE_COUNT_BIT;
+
     //ESP_LOGI("light", "raw value: %d", raw);
+    raw = raw / 27;
 
     HUB75SetBrigthness(raw  > 255 ? 255: raw);
      

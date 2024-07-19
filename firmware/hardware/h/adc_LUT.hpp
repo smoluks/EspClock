@@ -1,5 +1,4 @@
 //ADC correction table from https://esp32.com/viewtopic.php?f=19&t=2881&start=30#p47663 and https://github.com/MacLeod-D/ESP32-ADC
-
 #pragma once
 
 int ADC_LUT_INT[4096] = { 0,

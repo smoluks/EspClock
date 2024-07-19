@@ -4,7 +4,7 @@
 #include <Fonts/FreeSerif9pt7b.h>
 #include <FastLED.h>
 #include "h/hub75.hpp"
-#include "../h/pinsMapping.hpp"
+#include "../h/hardware.hpp"
 
 // Module configuration
 HUB75_I2S_CFG::i2s_pins _pins = {R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN};
@@ -26,7 +26,7 @@ bool brightnessLocked = true;
 
 void HUB75Init()
 {
-  ESP_LOGV("HUB75", "HUB75 init started");
+  ESP_LOGI("HUB75", "HUB75 init started");
 
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
@@ -46,7 +46,7 @@ void HUB75Init()
 
   brightnessLocked = false;
 
-  ESP_LOGV("HUB75", "HUB75 init completed");
+  ESP_LOGI("HUB75", "HUB75 init completed");
 }
 
 // set brightness 0 - 255

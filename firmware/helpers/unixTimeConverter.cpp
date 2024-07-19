@@ -10,9 +10,8 @@
 #define DAYS_PER_100Y (365*100 + 24)
 #define DAYS_PER_4Y   (365*4   + 1)
 
-DateTime UnixTimeToDateTime(uint32_t unixTime)
+bool TryConvertUnixTimeToDateTime(uint32_t unixTime, DateTime* result)
 {
-    DateTime result;
     uint64_t days, secs;
 	uint32_t remdays, remsecs, remyears;
 	uint32_t qc_cycles, c_cycles, q_cycles;
@@ -24,7 +23,7 @@ DateTime UnixTimeToDateTime(uint32_t unixTime)
 	if (unixTime < INT_MIN * 31622400LL || unixTime > INT_MAX * 31622400LL)
 	{
 		ESP_LOGW("UnixTimeToDateTime", "unixTime not in correct range");
-		return result;
+		return false;
 	}
 
 	secs = unixTime - LEAPOCH;
@@ -72,20 +71,19 @@ DateTime UnixTimeToDateTime(uint32_t unixTime)
 	//	return result;
 	//}
 
-	result.year = years % 100; //+ 100;
-	result.month = months + 2;
-	if (result.month >= 12) {
-		result.month -=12;
-		result.year++;
+	result->year = years % 100; //+ 100;
+	result->month = months + 2;
+	if (result->month >= 12) {
+		result->month -=12;
+		result->year++;
 	}
-	result.date = remdays + 1;
-	result.day = wday;
+	result->date = remdays + 1;
+	result->dayOfWeek = wday;
 	//tm->tm_yday = yday;
 
-	result.hour = remsecs / 3600;
-	result.minute = remsecs / 60 % 60;
-	result.second = remsecs % 60;
+	result->hour = remsecs / 3600;
+	result->minute = remsecs / 60 % 60;
+	result->second = remsecs % 60;
 
-    result.success = true;
-	return result;
+	return true;
 }

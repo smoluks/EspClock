@@ -1,5 +1,5 @@
 #include "h/touch.hpp"
-#include "../h/pinsMapping.hpp"
+#include "../h/hardware.hpp"
 
 void processTouchValue(uint16_t value);
 

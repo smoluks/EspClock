@@ -1,61 +1,109 @@
 #include <WiFi.h>
-#include <WiFiUdp.h>
-#include <NTPClient.h>
-#include "h/ds3231.hpp"
-#include "../h/settings.hpp"
+#include <esp_wifi.h>
 
-extern settings_t settings;
+//#include "../controllers/h/webController.hpp"
+#include "../h/settings.hpp"
+#include "h/WiFi.hpp"
+
+void setupAP();
+void setupClient();
+
+const IPAddress localIP(4, 3, 2, 1);   // the IP address the web server, Samsung requires the IP to be in public space
+const IPAddress gatewayIP(4, 3, 2, 1); // IP address of the network should be the same as the local IP for captive portals
+const IPAddress subnetMask(255, 255, 255, 0);
+
+const String localIPURL = "http://4.3.2.1";
 
 wl_status_t wifiStatus = WL_IDLE_STATUS;
 
-void updateTimeFromNTP();
+extern settings_t settings;
+
+void UpdateTimeFromNTP();
+inline void ProcessStatus(wl_status_t newWifiStatus);
 
 inline void WiFiInit()
-{    
-    if(settings.client_enable)
-        WiFi.begin(settings.client_ssid, settings.client_password);
+{
+    ESP_LOGI("WiFi", "WiFi init started");
 
-    if(settings.ap_enable == AP_ENABLE)
-        WiFi.softAP(settings.ap_ssid, settings.ap_password);
+    /*
+    // Disable AMPDU RX on the ESP32 WiFi to fix a bug on Android
+    esp_wifi_stop();
+    esp_wifi_deinit();
+    wifi_init_config_t my_config = WIFI_INIT_CONFIG_DEFAULT();
+    my_config.ampdu_rx_enable = false;
+    esp_wifi_init(&my_config);
+    esp_wifi_start();
+    vTaskDelay(100 / portTICK_PERIOD_MS); // Add a small delay*/
+
+    WiFi.setHostname("wifi.clock");
+
+    if (settings.client_enable)
+    {
+        setupClient();
+    }
+
+    if (settings.ap_enable == AP_ENABLE)
+        setupAP();
+
+    ESP_LOGI("WiFi", "WiFi init finished");
+}
+
+void setupClient()
+{
+    wl_status_t wifiStatus = WiFi.begin(settings.client_ssid, settings.client_password);
+    ProcessStatus(wifiStatus);
+}
+
+void setupAP()
+{
+    WiFi.softAPConfig(localIP, gatewayIP, subnetMask);
+    WiFi.softAP(settings.ap_ssid, settings.ap_password);
+    WiFi.enableAP(true);
+
+    //WebServerSetup();
 }
 
 inline void WiFiLoop()
 {
-    //Status change handlers
     wl_status_t newWifiStatus = WiFi.status();
-    if(newWifiStatus != wifiStatus)
+    if (newWifiStatus != wifiStatus)
     {
-        wifiStatus = newWifiStatus;        
-        ESP_LOGI("WiFi", "WiFi new status %d", newWifiStatus);
-
-        switch(wifiStatus)
-        {
-            case WL_CONNECTED:
-                ESP_LOGI("WiFi", "WiFi connected as client %s with ip %s", settings.client_ssid, WiFi.localIP().toString());
-                if(settings.ap_enable == AP_WHEN_NOT_CONNECTED)
-                    WiFi.enableAP(false);
-                if(settings.ntp_enable)
-                    updateTimeFromNTP();
-                break;
-            case WL_CONNECT_FAILED:
-                if(settings.ap_enable == AP_WHEN_NOT_CONNECTED)
-                    WiFi.enableAP(true);
-                    WiFi.softAP(settings.ap_ssid, settings.ap_password);
-                break;
-        }
+        wifiStatus = newWifiStatus;
+        ProcessStatus(newWifiStatus);
     }
 }
 
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP);
-void updateTimeFromNTP()
-{ 
-    timeClient.begin();
-    timeClient.setTimeOffset(settings.timezone_offset);
-    if (timeClient.update())
+inline void ProcessStatus(wl_status_t newWifiStatus)
+{
+    switch (wifiStatus)
     {
-        ESP_LOGV("WiFi", "NTP time: %d", timeClient.getEpochTime());
+    case WL_CONNECTED:
+        ESP_LOGI("WiFi", "WiFi connected as client %s with ip %s", settings.client_ssid, WiFi.localIP().toString());
+        if (settings.ntp_enable)
+            UpdateTimeFromNTP();
+        break;
+    case WL_NO_SSID_AVAIL:
+        ESP_LOGI("WiFi", "No SSID available");
+        break;
+    case WL_CONNECT_FAILED:
+        ESP_LOGI("WiFi", "Connect failed");
+        break;
+    //-----it's auto reconnected-----
+    case WL_CONNECTION_LOST:
+        ESP_LOGI("WiFi", "Connection lost");
+        break;
+        //WiFi.enableSTA(false);
+        //if (settings.ap_enable == AP_WHEN_NOT_CONNECTED)
+        //    WiFi.enableAP(false);
+        //break;
+    case WL_DISCONNECTED:
+        ESP_LOGI("WiFi", "Disconnected");
+        break;
+        //if (settings.ap_enable == AP_WHEN_NOT_CONNECTED)
+        //    setupAP();
+        //break;       
 
-        DS3231SetTime(timeClient.getEpochTime());
+    default:
+        break;
     }
 }

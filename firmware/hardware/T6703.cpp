@@ -1,7 +1,5 @@
-#include <T67XX.h>
 #include "h/i2c.hpp"
 #include "h/T6703.hpp"
-#include "../libs/pt-1.4/pt.h"
 
 uint16_t t6703_value;
 bool t6703_ready;

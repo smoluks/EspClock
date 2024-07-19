@@ -1,5 +1,5 @@
 #include "h/adc_LUT.hpp"
-#include "../h/pinsMapping.hpp"
+#include "../h/hardware.hpp"
 
 void voltageInit()
 {

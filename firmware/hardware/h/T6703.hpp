@@ -1,3 +1,4 @@
+//Thanks drug123 https://github.com/drug123/T67XX
 #pragma once
 
 #include "../../libs/pt-1.4/pt.h"
@@ -14,6 +15,8 @@
 #define T67XX_REG_ABC_LOGIC 0x03EE
 #define T67XX_REG_MOD_MODE 0x100B
 
+#define T67XX_READ_DELAY 10
+#define T67XX_MEASURE_DELAY 2250
 
 inline void T6703Init();
 inline void T6703Loop();

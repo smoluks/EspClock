@@ -3,10 +3,6 @@
 #undef USE_GFX_ROOT
 #undef NO_GFX
 
-#define PANEL_RES_X 64      // Number of pixels wide of each INDIVIDUAL panel module. 
-#define PANEL_RES_Y 32     // Number of pixels tall of each INDIVIDUAL panel module.
-#define PANEL_CHAIN 1      // Total number of panels chained one to another
-
 // Color definitions
 #define BLACK565    0x0000
 #define BLUE565     0x001F
@@ -17,9 +13,6 @@
 #define MAGENTA565  0xF81F
 #define YELLOW565   0xFFE0 
 #define WHITE565    0xFFFF
-
-//minimal correctly displaying brightness
-#define MIN_BRIGHTNESS 15
 
 void HUB75Init();
 void HUB75TestScreen();

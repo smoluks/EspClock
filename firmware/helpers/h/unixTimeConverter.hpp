@@ -2,4 +2,4 @@
 
 #include "../../hardware/h/ds3231.hpp"
 
-DateTime UnixTimeToDateTime(uint32_t unixTime);
+bool TryConvertUnixTimeToDateTime(uint32_t unixTime, DateTime* result);
