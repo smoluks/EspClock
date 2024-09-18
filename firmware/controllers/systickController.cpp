@@ -1,17 +1,19 @@
-//get current time
-inline uint32_t GetTimestamp()
+#include "h/systickController.hpp"
+
+//get current time in uS
+inline timestamp_uS_t GetTimestamp()
 {
     return esp_timer_get_time();
 }
 
-//get time after current
-inline uint32_t GetTimestamp(uint32_t after_current_in_ms)
+//get time after current, in uS
+inline timestamp_uS_t GetTimestamp(uint64_t after_current_in_us)
 {
-    return esp_timer_get_time() + after_current_in_ms * 1000;
+    return esp_timer_get_time() + after_current_in_us;
 }
 
 //check munis flag, but in unsigned logic
-inline bool IsTimeout(uint32_t timestamp)
+inline bool IsTimeout(timestamp_uS_t timestamp)
 {
-    return (timestamp - esp_timer_get_time()) & 0x80000000;
+    return (timestamp - (uint64_t)esp_timer_get_time()) & 0x8000000000000000;
 }

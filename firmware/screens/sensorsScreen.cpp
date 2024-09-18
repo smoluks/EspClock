@@ -7,28 +7,52 @@
 #include "h/screenCommon.hpp"
 #include "h/sensorsScreen.hpp"
 
-uint32_t sensor_screen_show_timestamp = 0;
-uint32_t sensor_screen_close_timestamp = 0;
+extern void (*SingleTapHandler)();
+extern void (*HoldTapHandler)();
 
+static timestamp_uS_t sensor_screen_show_timestamp = 0;
+static timestamp_uS_t sensor_screen_close_timestamp = 0;
+static bool isLocked = false;
+static bool sensorsScreenIsSingleTap = false;
 extern MatrixPanel_I2S_DMA *dma_display;
+
+void sensorsScreenSingleTapHandler() { sensorsScreenIsSingleTap = true; }
+void sensorsScreenHoldTapHandler() { isLocked = !isLocked; }
 
 void sensorsScreenInit()
 {
-    sensor_screen_close_timestamp = GetTimestamp(SENSORS_SCREEN_SHOW_TIME);
+    sensor_screen_close_timestamp = GetTimestamp(SENSORS_SCREEN_SHOW_TIME * 1000);
     sensor_screen_show_timestamp = GetTimestamp(-1);
     dma_display->setTextSize(1);
+
+    SingleTapHandler = sensorsScreenSingleTapHandler;
+    HoldTapHandler = sensorsScreenHoldTapHandler;
 }
 
 screen_action_t sensorsScreenLoop()
 {
-    if (IsTimeout(sensor_screen_close_timestamp))
+    if (sensorsScreenIsSingleTap || (!isLocked && IsTimeout(sensor_screen_close_timestamp)))
+    {
+        sensorsScreenIsSingleTap = false;
+        SingleTapHandler = NULL;
+        HoldTapHandler = NULL;
+
         return SCREEN_ACTION_GO_TO_DEFAULT;
+    }        
 
     if (!IsTimeout(sensor_screen_show_timestamp))
         return SCREEN_ACTION_NOTHING;
-    sensor_screen_show_timestamp = GetTimestamp(SENSORS_SCREEN_REFRESH_PERIOD);
+
+    sensor_screen_show_timestamp = GetTimestamp(SENSORS_SCREEN_REFRESH_PERIOD * 1000);
 
     dma_display->fillScreenRGB888(0, 0, 0);
+
+    if(isLocked)
+    {
+        dma_display->setTextColor(RED565);
+        dma_display->setCursor(57, 0);
+        dma_display->print("L");
+    }
 
     dma_display->setTextColor(GREEN565);
     dma_display->setCursor(1, 0);

@@ -1,3 +1,4 @@
+#line 1 "C:\\Users\\Administrator\\Desktop\\clock_esp\\firmware\\hardware\\FUSB302.cpp"
 //Based on FUSB302 PD UFP sink by Kai Liebich Version 0.1.0 https://github.com/kcl93/fusb302_arduino
 //Please pay attention to performance
 //We need to proceed events faster than 10ms
@@ -83,7 +84,7 @@ inline void FUSB302Init()
   ESP_LOGV("FUSB302", "FUSB302 version 0x%X", FUSB302.reg_control[0]);
 
   // do only FUSB302 stuff to process pd init procedure with max performance
-  uint32_t fusb_loop_timestamp = GetTimestamp(2000);  
+  timestamp_uS_t fusb_loop_timestamp = GetTimestamp(2000*1000);  
   do
   {
     FUSB302Loop();
@@ -134,7 +135,7 @@ inline void readEvents()
 
 // Processing time between connection and start data exchange
 bool send_src_cap;
-uint32_t timestamp_src_cap;
+timestamp_uS_t timestamp_src_cap;
 uint8_t get_src_cap_retry_count;
 inline void processSrcCap()
 {
@@ -157,7 +158,7 @@ inline void processSrcCap()
   PD_protocol_create_get_src_cap(&protocol, &header);
   FUSB302_tx_sop(&FUSB302, header, 0);
 
-  timestamp_src_cap = GetTimestamp(t_TypeCSinkWaitCap);
+  timestamp_src_cap = GetTimestamp(t_TypeCSinkWaitCap*1000);
 
   ESP_LOGV("FUSB302", "Send SOP");
 }
@@ -202,7 +203,7 @@ inline void checkAnalogProtocol()
 
 // Process PD request timeout (after host answer for src cap)
 bool wait_pd_rdy;
-uint32_t timestamp_wait_pd_rdy;
+timestamp_uS_t timestamp_wait_pd_rdy;
 inline void processPDReadyTimeout()
 {
   if (!wait_pd_rdy)
@@ -219,7 +220,7 @@ inline void processPDReadyTimeout()
 }
 
 // Send PPS request
-uint32_t timestamp_next_PPS_request;
+timestamp_uS_t timestamp_next_PPS_request;
 uint8_t send_PPS_request_now;
 inline void processPPSRequest()
 {
@@ -229,10 +230,10 @@ inline void processPPSRequest()
   if (send_PPS_request_now || (status_power == FUSB302_STATUS_PPS && IsTimeout(timestamp_next_PPS_request)))
   {
     wait_pd_rdy = true;
-    timestamp_wait_pd_rdy = GetTimestamp(t_RequestToPSReady);
+    timestamp_wait_pd_rdy = GetTimestamp(t_RequestToPSReady*1000);
 
     send_PPS_request_now = false;
-    timestamp_next_PPS_request = GetTimestamp(t_PPSRequest);
+    timestamp_next_PPS_request = GetTimestamp(t_PPSRequest*1000);
 
     uint16_t header;
     uint32_t obj[7];
@@ -262,7 +263,7 @@ void handleFUSB302Event(FUSB302_event_t events)
     {
       // let's try to exchange
       send_src_cap = true;
-      timestamp_src_cap = GetTimestamp(t_TypeCSinkWaitCap);
+      timestamp_src_cap = GetTimestamp(t_TypeCSinkWaitCap*1000);
       get_src_cap_retry_count = 0;
     }
     else
@@ -320,7 +321,7 @@ void handleProtocolEvent(PD_protocol_event_t events)
 
     // start timeout control
     wait_pd_rdy = true;
-    timestamp_wait_pd_rdy = GetTimestamp(t_RequestToPSReady);
+    timestamp_wait_pd_rdy = GetTimestamp(t_RequestToPSReady*1000);
     ESP_LOGV("FUSB302", "Received event PD_PROTOCOL_EVENT_SRC_CAP");
   }
   if (events & PD_PROTOCOL_EVENT_REJECT)

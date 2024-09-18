@@ -7,15 +7,17 @@
 #include "h/clockScreen.hpp"
 
 void moveCursor();
+void clockScreenSingleTapHandler();
 const char *GetDayOfWeekUserName(uint8_t day);
 
 extern MatrixPanel_I2S_DMA *dma_display;
+extern void (*SingleTapHandler)();
 
 static uint8_t current_x;
 static uint8_t current_y;
 static int8_t speed_x;
 static int8_t speed_y;
-
+static bool clockScreenIsSingleTap;
 void clockScreenInit()
 {
     current_x = random(5);
@@ -23,14 +25,20 @@ void clockScreenInit()
 
     speed_x = random(2) == 1 ? 1 : -1;
     speed_y = random(2) == 1 ? 1 : -1;
+
+    SingleTapHandler = clockScreenSingleTapHandler;
 }
+
+void clockScreenSingleTapHandler() { clockScreenIsSingleTap = true; }
 
 uint8_t oldMinute = 255;
 uint32_t clock_page_show_timestamp = 0;
 screen_action_t clockScreenLoop()
 {
-    if (isTouched())
+    if (clockScreenIsSingleTap)
     {
+        clockScreenIsSingleTap = false;
+        SingleTapHandler = NULL;
         return SCREEN_ACTION_GO_TO_NEXT;
     }
 

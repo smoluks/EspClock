@@ -1,64 +1,80 @@
+#include "../h/prototheads.hpp"
 #include "h/touch.hpp"
 #include "../h/hardware.hpp"
+#include "../controllers/h/systickController.hpp"
 
-void processTouchValue(uint16_t value);
+static const char *TOUCH_TAG = "touch";
 
-uint32_t touch_raw_value = 0;
-uint8_t touch_count = 0;
-void touchLoop()
+void processTouch();
+void processUntouch();
+
+void (*SingleTapHandler)();
+void (*HoldTapHandler)();
+
+static struct pt touch_pt;
+static bool is_touched = false;
+static timestamp_uS_t touch_timestamp;
+static timestamp_uS_t touch_process_timestamp = 0;
+static uint16_t touch_previous_value = 0;
+static bool hold_touched_evt_readed = false;
+uint8_t TouchLoop()
 {
-    touch_raw_value += touchRead(TOUCH_PIN);    
-    if(++touch_count < 64)
+    PT_BEGIN(&touch_pt);
+
+    PT_WAIT_UNTIL(&touch_pt, IsTimeout(touch_process_timestamp));
+
+    touch_process_timestamp = GetTimestamp(TOUCH_PROCESS_CYCLE_MS * 1000);
+
+    //-----check value-----
+    uint16_t value = touchRead(TOUCH_PIN);
+    //if(value != touch_previous_value)
+    //    ESP_LOGV(TOUCH_TAG, "touch raw value: %d", value);
+
+    int16_t diff = value - touch_previous_value;
+    touch_previous_value = value;
+    if(diff <= -TOUCH_ON_HYSTERESIS)
     {
-        return;
+        processTouch();
     }
-    touch_count = 0;
-    
-    touch_raw_value = touch_raw_value >> 6;
-    ESP_LOGV("touch", "touch raw value: %d", touch_raw_value);
+    if(diff >= TOUCH_ON_HYSTERESIS)
+    {
+        processUntouch();
+    }
 
-    processTouchValue(touch_raw_value);
+    //
+    if(is_touched && !hold_touched_evt_readed && GetTimestamp() - touch_timestamp >= TOUCH_TIME_FOR_HOLD_MS * 1000)
+    {
+        ESP_LOGI(TOUCH_TAG, "hold touch evt, handler: %p", HoldTapHandler);
 
-    touch_raw_value = 0;
+        if(HoldTapHandler)
+            HoldTapHandler();
+
+        hold_touched_evt_readed = true;
+    }
+
+    PT_END(&touch_pt);
 }
 
-bool touch_old_value = false;
-int touch_filter_count = 0;
-bool is_touched_flag = false;
-uint16_t max_value = 0;
-void processTouchValue(uint16_t value)
+inline void processTouch()
 {
-    if(value > max_value)
-    {
-        max_value = value;
-    }
+    is_touched = true;
+    touch_timestamp = GetTimestamp();
 
-    bool currentValue = max_value - value > TOUCH_ON_HYSTERESIS;    
-    if(currentValue == touch_old_value)
-    {
-        if(touch_filter_count < TOUCH_CYCLE_COUNT)
-        {
-            touch_filter_count++;
-        } else if (touch_filter_count == TOUCH_CYCLE_COUNT)
-        {
-            if(currentValue)
-            {
-                is_touched_flag = true;
-            }
-        }        
-    } else {
-        touch_old_value = currentValue;
-        touch_filter_count = 0;
-    }
+    ESP_LOGI(TOUCH_TAG, "touched");
 }
 
-inline bool isTouched()
+inline void processUntouch()
 {
-    if(is_touched_flag)
+    ESP_LOGI(TOUCH_TAG, "untouched");
+
+    if(is_touched && GetTimestamp() - touch_timestamp < TOUCH_TIME_FOR_HOLD_MS * 1000)
     {
-        is_touched_flag = false;
-        return true;
-    } else {
-        return false;
+        ESP_LOGI(TOUCH_TAG, "touch evt, handler: %p", SingleTapHandler);
+
+        if(SingleTapHandler)
+            SingleTapHandler();
     }
+
+    is_touched = false;
+    hold_touched_evt_readed = false;
 }

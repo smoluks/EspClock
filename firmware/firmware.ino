@@ -46,24 +46,26 @@ void setup()
   ESP_LOGI("main", "Init complete");
 }
 
-uint32_t minimum_free_heap_size_warn_level = 64000;
+uint32_t free_heap_size = 64000;
 void loop()
 {
   // if (getTimePassedFrom(firmware_loop_timestamp) > 10)
   //   ESP_LOGW("firmware", "loop() interval %d ms", getTimePassedFrom(firmware_loop_timestamp));
   // firmware_loop_timestamp = millis();
 
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
   uint32_t current_free_heap_size = esp_get_free_heap_size();
-  if(current_free_heap_size < minimum_free_heap_size_warn_level)
+  if(current_free_heap_size < free_heap_size)
   {
-     minimum_free_heap_size_warn_level = current_free_heap_size;
-     ESP_LOGW("firmware", "Free RAM low warning: %d bytes", minimum_free_heap_size_warn_level);
+     free_heap_size = current_free_heap_size;
+     ESP_LOGI("firmware", "Free RAM: %d bytes", current_free_heap_size);
   }
+#endif
 
   lightLoop();
   voltageLoop();
   CurrentLoop();
-  touchLoop();
+  TouchLoop();
 
   WiFiLoop();
   //WebServerLoop();

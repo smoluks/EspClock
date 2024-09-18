@@ -6,7 +6,7 @@
 #include "h/errorsScreen.hpp"
 
 extern MatrixPanel_I2S_DMA *dma_display;
-uint32_t error_screen_show_timestamp = 0;
+timestamp_uS_t error_screen_show_timestamp = 0;
 
 void errorScreenInit()
 {
@@ -23,7 +23,7 @@ screen_action_t errorScreenLoop()
 
     if (!IsTimeout(error_screen_show_timestamp))
         return SCREEN_ACTION_NOTHING;
-    error_screen_show_timestamp = GetTimestamp(ERROR_SCREEN_REFRESH_PERIOD);
+    error_screen_show_timestamp = GetTimestamp(ERROR_SCREEN_REFRESH_PERIOD * 1000);
     
     dma_display->fillScreenRGB888(0, 0, 0);    
 
