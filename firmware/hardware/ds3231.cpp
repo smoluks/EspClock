@@ -11,28 +11,30 @@
 #define DS3231_REG_CONTROL_CONV (1 << 5)
 #define DS3231_REG_STATUS 0x0F
 
-DateTime DS3231_current_time;
-bool DS3231_time_is_ready = false;
-bool DS3231_need_update_time;
-DateTime DS3231_time_to_update;
-
 bool trySetTime(DateTime time);
 void readTime();
 uint8_t readSeconds();
 
+static const char *DS3231_TAG = "DS3231";
+
+static DateTime DS3231_current_time;
+static bool DS3231_time_is_ready = false;
+static bool DS3231_need_update_time;
+static DateTime DS3231_time_to_update;
+
 void DS3231Init()
 {
-    ESP_LOGI("DS3231", "DS3231 init started");
+    ESP_LOGI(DS3231_TAG, "DS3231 init started");
 
     // trying to read
     uint8_t value;
     if (I2CReadRegister(DS3231_I2C_ADDR, DS3231_REG_STATUS, &value) != 1)
     {
         setError(ERROR_DS3231_NOT_FOUND);
-        ESP_LOGE("DS3231", "DS3231 not answered");
+        ESP_LOGE(DS3231_TAG, "DS3231 not answered");
         return;
     }
-    ESP_LOGI("DS3231", "DS3231 status 0x%X", value);
+    ESP_LOGI(DS3231_TAG, "DS3231 status 0x%X", value);
 
     I2CWriteRegister(DS3231_I2C_ADDR, DS3231_REG_CONTROL, 0);
 
@@ -50,7 +52,7 @@ void DS3231Init()
 
     readTime();
 
-    ESP_LOGI("DS3231", "DS3231 init finished");
+    ESP_LOGI(DS3231_TAG, "DS3231 init finished");
 }
 
 uint8_t raw_seconds;
@@ -97,7 +99,7 @@ void readTime()
     if (I2CReadRegisters(DS3231_I2C_ADDR, 0, result, sizeof(result)) != sizeof(result))
     {
         setError(ERROR_DS3231_NOT_FOUND);
-        ESP_LOGE("DS3231", "DS3231 not answered");
+        ESP_LOGE(DS3231_TAG, "DS3231 not answered");
         return;
     }
 
@@ -111,7 +113,7 @@ void readTime()
     DS3231_time_is_ready = true;
 
     raw_seconds = result[0];
-    ESP_LOGV("DS3231", "DS3231 time %X:%X:%X", result[2], result[1], result[0]);
+    ESP_LOGV(DS3231_TAG, "DS3231 time %X:%X:%X", result[2], result[1], result[0]);
 }
 
 uint8_t readSeconds()
@@ -120,7 +122,7 @@ uint8_t readSeconds()
     if (I2CReadRegister(DS3231_I2C_ADDR, 0, &result) != 1)
     {
         setError(ERROR_DS3231_NOT_FOUND);
-        ESP_LOGE("DS3231", "DS3231 not answered");
+        ESP_LOGE(DS3231_TAG, "DS3231 not answered");
         return 255;
     }
 
@@ -140,12 +142,12 @@ bool trySetTime(DateTime time)
 
     if (I2CWriteRegisters(DS3231_I2C_ADDR, 0, command, sizeof(command)) == sizeof(command))
     {
-        ESP_LOGI("DS3231", "Set time: %d.%d.%d %d %d:%d:%d", time.date, time.month + 1, time.year, time.dayOfWeek + 1, time.hour, time.minute, time.second);
+        ESP_LOGI(DS3231_TAG, "Set time: %d.%d.%d %d %d:%d:%d", time.date, time.month + 1, time.year, time.dayOfWeek + 1, time.hour, time.minute, time.second);
         return true;
     }
     else
     {
-        ESP_LOGW("DS3231", "DS3231 time write error, time: %d.%d.%d %d %d:%d:%d", time.date, time.month + 1, time.year, time.dayOfWeek + 1, time.hour, time.minute, time.second);
+        ESP_LOGW(DS3231_TAG, "DS3231 time write error, time: %d.%d.%d %d %d:%d:%d", time.date, time.month + 1, time.year, time.dayOfWeek + 1, time.hour, time.minute, time.second);
         return false;
     }
 }

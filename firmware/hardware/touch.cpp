@@ -27,26 +27,25 @@ uint8_t TouchLoop()
 
     //-----check value-----
     uint16_t value = touchRead(TOUCH_PIN);
-    //if(value != touch_previous_value)
-    //    ESP_LOGV(TOUCH_TAG, "touch raw value: %d", value);
+    // if(value != touch_previous_value)
+    //     ESP_LOGV(TOUCH_TAG, "touch raw value: %d", value);
 
     int16_t diff = value - touch_previous_value;
     touch_previous_value = value;
-    if(diff <= -TOUCH_ON_HYSTERESIS)
+    if (diff <= -TOUCH_ON_HYSTERESIS)
     {
         processTouch();
     }
-    if(diff >= TOUCH_ON_HYSTERESIS)
+    if (diff >= TOUCH_ON_HYSTERESIS)
     {
         processUntouch();
     }
 
-    //
-    if(is_touched && !hold_touched_evt_readed && GetTimestamp() - touch_timestamp >= TOUCH_TIME_FOR_HOLD_MS * 1000)
+    //-----check hold condition-----
+    if (is_touched && !hold_touched_evt_readed && GetTimestamp() - touch_timestamp >= TOUCH_TIME_FOR_HOLD_MS * 1000)
     {
         ESP_LOGI(TOUCH_TAG, "hold touch evt, handler: %p", HoldTapHandler);
-
-        if(HoldTapHandler)
+        if (HoldTapHandler)
             HoldTapHandler();
 
         hold_touched_evt_readed = true;
@@ -57,23 +56,19 @@ uint8_t TouchLoop()
 
 inline void processTouch()
 {
+    ESP_LOGI(TOUCH_TAG, "touched");
+
     is_touched = true;
     touch_timestamp = GetTimestamp();
 
-    ESP_LOGI(TOUCH_TAG, "touched");
+    ESP_LOGI(TOUCH_TAG, "touch evt, handler: %p", SingleTapHandler);
+    if (SingleTapHandler)
+        SingleTapHandler();
 }
 
 inline void processUntouch()
 {
     ESP_LOGI(TOUCH_TAG, "untouched");
-
-    if(is_touched && GetTimestamp() - touch_timestamp < TOUCH_TIME_FOR_HOLD_MS * 1000)
-    {
-        ESP_LOGI(TOUCH_TAG, "touch evt, handler: %p", SingleTapHandler);
-
-        if(SingleTapHandler)
-            SingleTapHandler();
-    }
 
     is_touched = false;
     hold_touched_evt_readed = false;

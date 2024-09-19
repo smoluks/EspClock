@@ -1,6 +1,13 @@
 #pragma once
 
+enum status_power_e
+{
+  FUSB302_STATUS_INITIAL = 0,
+  FUSB302_STATUS_NA,
+  FUSB302_STATUS_ANALOG,
+  FUSB302_STATUS_PD,
+  FUSB302_STATUS_PPS
+};
+
 void FUSB302Init();
 void FUSB302Loop();
-bool IsFUSB302PDPresent();
-uint16_t GetPermittedUSBCurrent();

@@ -3,7 +3,7 @@
 
 //#define SEALEVELPRESSURE_HPA (1013.25)
 
-extern BME280_SensorMeasurements measurements;
+extern BME280_SensorMeasurements BME280Measurements;
 extern bool BME280_results_ready;
 extern uint8_t BME280_id;
 
@@ -24,12 +24,12 @@ inline bool IsHumidityPresent()
 
 inline float GetTemperature()
 {
-    return measurements.temperature;
+    return BME280Measurements.temperature;
 }
 
 inline float GetPressure()
 {
-    return measurements.pressure / 100;
+    return BME280Measurements.pressure / 100;
 }
 
 // float BME280GetAltitude()
@@ -39,5 +39,5 @@ inline float GetPressure()
 
 inline float GetHumidity()
 {
-    return measurements.humidity;
+    return BME280Measurements.humidity;
 }

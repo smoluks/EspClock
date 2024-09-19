@@ -14,41 +14,32 @@
 #define t_RequestToPSReady 580 // PD_PROTOCOL_EVENT_PS_RDY timeout after PD_PROTOCOL_EVENT_SRC_CAP. Combine t_SenderResponse and t_PSTransition
 #define t_PPSRequest 5000      // time between PPS sync. Must less than 10000 (10s)
 
-enum status_power_e
-{
-  FUSB302_STATUS_INITIAL = 0,
-  FUSB302_STATUS_NA,
-  FUSB302_STATUS_ANALOG,
-  FUSB302_STATUS_PD,
-  FUSB302_STATUS_PPS
-} status_power;
+static const char *FUSB302_TAG = "FUSB302";
 
-void FUSB302InitInternal();
-void handleFUSB302Event(FUSB302_event_t events);
-void handleProtocolEvent(PD_protocol_event_t events);
-void setPowerStatus(status_power_e status, uint16_t voltage, uint16_t current);
+void (*PowerChangedHandler)(status_power_e status, uint16_t voltage, uint16_t current) = nullptr;
 
-inline void readEvents();
-inline void processSrcCap();
-inline void processPPSRequest();
-inline void processPDReadyTimeout();
-inline void checkAnalogProtocol();
+static void FUSB302InitInternal();
+static void handleFUSB302Event(FUSB302_event_t events);
+static void handleProtocolEvent(PD_protocol_event_t events);
+static void setPowerStatus(status_power_e status, uint16_t voltage, uint16_t current);
 
-FUSB302_ret_t FUSB302_i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count);
-FUSB302_ret_t FUSB302_i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count);
-FUSB302_ret_t FUSB302_delay_ms(uint32_t t);
+static inline void readEvents();
+static inline void processSrcCap();
+static inline void processPPSRequest();
+static inline void processPDReadyTimeout();
+static inline void checkAnalogProtocol();
 
-PD_protocol_t protocol;
-FUSB302_dev_t FUSB302;
-uint16_t ready_voltage;
-uint16_t ready_current = 500;
+static FUSB302_ret_t FUSB302_i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count);
+static FUSB302_ret_t FUSB302_i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count);
+static FUSB302_ret_t FUSB302_delay_ms(uint32_t t);
+
+static PD_protocol_t protocol;
+static FUSB302_dev_t FUSB302;
 
 inline void FUSB302Init()
 {
-  ESP_LOGI("FUSB302", "FUSB302 init started");
+  ESP_LOGI(FUSB302_TAG, "FUSB302 init started");
 
-  status_power = FUSB302_STATUS_INITIAL;
-  
   memset(&FUSB302, 0, sizeof(FUSB302_dev_t));
   memset(&protocol, 0, sizeof(PD_protocol_t));
 
@@ -76,12 +67,12 @@ inline void FUSB302Init()
   } while (result != FUSB302_SUCCESS && ++count < 10);
   if (result != FUSB302_SUCCESS)
   {
-    ESP_LOGE("FUSB302", "FUSB302 init return error %d", result);
+    ESP_LOGE(FUSB302_TAG, "FUSB302 init return error %d", result);
     setError(ERROR_FUSB302_NOT_FOUND);
     return;
   }
 
-  ESP_LOGV("FUSB302", "FUSB302 version 0x%X", FUSB302.reg_control[0]);
+  ESP_LOGI(FUSB302_TAG, "FUSB302 version 0x%X", FUSB302.reg_control[0]);
 
   // do only FUSB302 stuff to process pd init procedure with max performance
   timestamp_uS_t fusb_loop_timestamp = GetTimestamp(2000*1000);  
@@ -93,7 +84,7 @@ inline void FUSB302Init()
     delay(1);
   } while (!IsTimeout(fusb_loop_timestamp));
 
-  ESP_LOGI("FUSB302", "PD init finished");
+  ESP_LOGI(FUSB302_TAG, "PD init finished");
 }
 
 bool first_time = true;
@@ -110,12 +101,6 @@ inline void FUSB302Loop()
   processPPSRequest();
 }
 
-// mA
-uint16_t GetPermittedUSBCurrent()
-{
-  return ready_current;
-}
-
 // read i2c regs events
 inline void readEvents()
 {
@@ -123,7 +108,7 @@ inline void readEvents()
   FUSB302_event_flags = 0;
   if (FUSB302_alert(&FUSB302, &FUSB302_event_flags) != FUSB302_SUCCESS)
   {
-    ESP_LOGE("FUSB302", "FUSB302_alert error");
+    ESP_LOGE(FUSB302_TAG, "FUSB302_alert error");
     return;
   }
 
@@ -133,12 +118,13 @@ inline void readEvents()
   }
 }
 
-// Processing time between connection and start data exchange
-bool send_src_cap;
-timestamp_uS_t timestamp_src_cap;
-uint8_t get_src_cap_retry_count;
+//6.4.1.2 Source_Capabilities Message
+static bool send_src_cap;
+static timestamp_uS_t timestamp_src_cap;
+static uint8_t get_src_cap_retry_count;
 inline void processSrcCap()
 {
+  // Processing time between connection and starting data exchange
   if (!send_src_cap || !IsTimeout(timestamp_src_cap))
     return;
 
@@ -148,19 +134,19 @@ inline void processSrcCap()
     send_src_cap = false;
 
     // FUSB302_tx_hard_reset(&FUSB302);
-    // PD_protocol_reset(&protocol);
+    PD_protocol_reset(&protocol);
     checkAnalogProtocol();
     return;
   }
 
-  /* Try to request soruce capabilities message (will not cause power cycle VBUS) */
+  //Try to request soruce capabilities message (will not cause power cycle VBUS)
   uint16_t header;
   PD_protocol_create_get_src_cap(&protocol, &header);
   FUSB302_tx_sop(&FUSB302, header, 0);
 
   timestamp_src_cap = GetTimestamp(t_TypeCSinkWaitCap*1000);
 
-  ESP_LOGV("FUSB302", "Send SOP");
+  ESP_LOGV(FUSB302_TAG, "Send SOP");
 }
 
 inline void checkAnalogProtocol()
@@ -201,38 +187,31 @@ inline void checkAnalogProtocol()
   }
 }
 
-// Process PD request timeout (after host answer for src cap)
-bool wait_pd_rdy;
-timestamp_uS_t timestamp_wait_pd_rdy;
+// Check PD profile request timeout
+static bool wait_ps_rdy;
+static timestamp_uS_t timestamp_wait_pd_rdy;
 inline void processPDReadyTimeout()
 {
-  if (!wait_pd_rdy)
-    return;
-
-  if (!IsTimeout(timestamp_wait_pd_rdy))
+  if (!wait_ps_rdy || !IsTimeout(timestamp_wait_pd_rdy))
     return;
 
   // not today
-  wait_pd_rdy = false;
+  wait_ps_rdy = false;
   checkAnalogProtocol();
 
-  ESP_LOGW("FUSB302", "PD ready timeout");
+  ESP_LOGW(FUSB302_TAG, "PS ready timeout");
 }
 
-// Send PPS request
-timestamp_uS_t timestamp_next_PPS_request;
-uint8_t send_PPS_request_now;
+// Send PPS request - not used
+static timestamp_uS_t timestamp_next_PPS_request;
+static uint8_t is_PPS_used = false;
 inline void processPPSRequest()
 {
-  if (wait_pd_rdy)
-    return;
-
-  if (send_PPS_request_now || (status_power == FUSB302_STATUS_PPS && IsTimeout(timestamp_next_PPS_request)))
+  if (is_PPS_used && !wait_ps_rdy && IsTimeout(timestamp_next_PPS_request))
   {
-    wait_pd_rdy = true;
+    wait_ps_rdy = true;
     timestamp_wait_pd_rdy = GetTimestamp(t_RequestToPSReady*1000);
 
-    send_PPS_request_now = false;
     timestamp_next_PPS_request = GetTimestamp(t_PPSRequest*1000);
 
     uint16_t header;
@@ -241,7 +220,7 @@ inline void processPPSRequest()
     PD_protocol_create_request(&protocol, &header, obj);
     FUSB302_tx_sop(&FUSB302, header, obj);
 
-    ESP_LOGV("FUSB302", "Sended PPS request");
+    ESP_LOGV(FUSB302_TAG, "Sended PPS request");
   }
 }
 
@@ -251,7 +230,7 @@ void handleFUSB302Event(FUSB302_event_t events)
   {
     PD_protocol_reset(&protocol);
     setPowerStatus(FUSB302_STATUS_NA, 5000, 500);
-    ESP_LOGV("FUSB302", "PD detached");
+    ESP_LOGV(FUSB302_TAG, "PD detached");
   }
   if (events & FUSB302_EVENT_ATTACHED)
   {
@@ -285,15 +264,15 @@ void handleFUSB302Event(FUSB302_event_t events)
     /*
     if ((header >> 15) & 0x1)
     {
-      ESP_LOGV("FUSB302", "Received RX_SOP Extended, message type 0x%X", (header >> 0) & 0x1F);
+      ESP_LOGV(FUSB302_TAG, "Received RX_SOP Extended, message type 0x%X", (header >> 0) & 0x1F);
     }
     else if ((header >> 12) & 0x7)
     {
-      ESP_LOGV("FUSB302", "Received RX_SOP Data, message type 0x%X", (header >> 0) & 0x1F);
+      ESP_LOGV(FUSB302_TAG, "Received RX_SOP Data, message type 0x%X", (header >> 0) & 0x1F);
     }
     else
     {
-      ESP_LOGV("FUSB302", "Received RX_SOP Command, message type 0x%X", (header >> 0) & 0x1F);
+      ESP_LOGV(FUSB302_TAG, "Received RX_SOP Command, message type 0x%X", (header >> 0) & 0x1F);
     }*/
   }
   if (events & FUSB302_EVENT_GOOD_CRC_SENT)
@@ -306,7 +285,7 @@ void handleFUSB302Event(FUSB302_event_t events)
       FUSB302_tx_sop(&FUSB302, header, obj);
     }
 
-    ESP_LOGV("FUSB302", "GOOD_CRC_SENT");
+    ESP_LOGV(FUSB302_TAG, "GOOD_CRC_SENT");
   }
 }
 
@@ -314,35 +293,38 @@ uint16_t PPS_voltage_next;
 uint8_t PPS_current_next;
 void handleProtocolEvent(PD_protocol_event_t events)
 {
-  if (events & PD_PROTOCOL_EVENT_SRC_CAP)
+  if (events & PD_PROTOCOL_EVENT_SRC_CAP) //SRC_CAP answer received
   {
-    // SRC_CAP answer received, no more sending SRC_CAP
+    //no more sending SRC_CAP
     send_src_cap = false;
 
-    // start timeout control
-    wait_pd_rdy = true;
+    //TODO: check returned profiles and select most interesting for us 
+
+    // start ready timeout control because library already answered with our profile 
+    wait_ps_rdy = true;
+
     timestamp_wait_pd_rdy = GetTimestamp(t_RequestToPSReady*1000);
-    ESP_LOGV("FUSB302", "Received event PD_PROTOCOL_EVENT_SRC_CAP");
+    ESP_LOGV(FUSB302_TAG, "Received event PD_PROTOCOL_EVENT_SRC_CAP");
   }
-  if (events & PD_PROTOCOL_EVENT_REJECT)
+  if (events & PD_PROTOCOL_EVENT_REJECT) // not supported requested profile - okay
   {
-    // thing is not in the mood to communicate - okay
-    wait_pd_rdy = false;
+    wait_ps_rdy = false;
     checkAnalogProtocol();
 
-    ESP_LOGV("FUSB302", "Received event PD_PROTOCOL_EVENT_REJECT");
+    ESP_LOGV(FUSB302_TAG, "Received event PD_PROTOCOL_EVENT_REJECT");
   }
-  if (events & PD_PROTOCOL_EVENT_PS_RDY)
+  if (events & PD_PROTOCOL_EVENT_PS_RDY) // requested profile started
   {
-    // success
-    wait_pd_rdy = false;
+    wait_ps_rdy = false;
 
     PD_power_info_t p;
     uint8_t i, selected_power = PD_protocol_get_selected_power(&protocol);
     PD_protocol_get_power_info(&protocol, selected_power, &p);
     if (p.type == PD_PDO_TYPE_AUGMENTED_PDO)
     {
-      // PPS mode
+      // PPS mode - not used
+      is_PPS_used = true;
+
       FUSB302_set_vbus_sense(&FUSB302, 0);
       if (PPS_voltage_next)
       {
@@ -350,76 +332,77 @@ void handleProtocolEvent(PD_protocol_event_t events)
         PD_protocol_set_PPS(&protocol, PPS_voltage_next, PPS_current_next, false);
         PPS_voltage_next = 0;
 
-        ESP_LOGV("FUSB302", "Received event PD_PROTOCOL_EVENT_PS_RDY, make two-stage startup");
+        ESP_LOGV(FUSB302_TAG, "Received event PD_PROTOCOL_EVENT_PS_RDY, make two-stage startup");
       }
       else
       {
-        timestamp_next_PPS_request = millis();
+        timestamp_next_PPS_request = GetTimestamp(); //now!
+
         setPowerStatus(FUSB302_STATUS_PPS, PD_protocol_get_PPS_voltage(&protocol) * 20, PD_protocol_get_PPS_current(&protocol) * 50);
 
-        // status_log_event(STATUS_LOG_POWER_READY);
-        ESP_LOGV("FUSB302", "Received event PD_PROTOCOL_EVENT_PS_RDY, PPS OK");
+        ESP_LOGV(FUSB302_TAG, "Received event PD_PROTOCOL_EVENT_PS_RDY");
       }
     }
     else
     {
+      //Profile mode
+      is_PPS_used = false;
       FUSB302_set_vbus_sense(&FUSB302, 1);
       setPowerStatus(FUSB302_STATUS_PD, p.max_v * 50, p.max_i * 10);
 
-      ESP_LOGV("FUSB302", "Received event PD_PROTOCOL_EVENT_PS_RDY, PD OK");
+      ESP_LOGV(FUSB302_TAG, "Received event PD_PROTOCOL_EVENT_PS_RDY, PD OK");
     }
   }
 }
 
 /// voltage and current in mV, mA
-void setPowerStatus(status_power_e status, uint16_t voltage, uint16_t current)
+void setPowerStatus(status_power_e status, uint16_t ready_voltage, uint16_t ready_current)
 {
-  status_power = status;
-  ready_voltage = voltage;
-  ready_current = current;
+  if(PowerChangedHandler != nullptr)
+    PowerChangedHandler(status, ready_voltage, ready_current);
 
   switch (status)
   {
   case FUSB302_STATUS_NA:
-    ESP_LOGI("FUSB302", "Not found any protocol in USB, default voltage: %d mV, current: %d mA", ready_voltage, ready_current);
+    ESP_LOGI(FUSB302_TAG, "Not found any protocol in USB, default voltage: %d mV, current: %d mA", ready_voltage, ready_current);
     break;
   case FUSB302_STATUS_ANALOG:
-    ESP_LOGI("FUSB302", "PD attached at analog mode with voltage: %d mV, current: %d mA", ready_voltage, ready_current);
+    ESP_LOGI(FUSB302_TAG, "PD attached at analog mode with voltage: %d mV, current: %d mA", ready_voltage, ready_current);
     break;
   case FUSB302_STATUS_PD:
-    ESP_LOGI("FUSB302", "PD attached at PD mode with voltage: %d mV, current: %d mA", ready_voltage, ready_current);
+    ESP_LOGI(FUSB302_TAG, "PD attached at PD mode with voltage: %d mV, current: %d mA", ready_voltage, ready_current);
     break;
   case FUSB302_STATUS_PPS:
-    ESP_LOGI("FUSB302", "PD attached at PPS mode with voltage: %d mV, current: %d mA", ready_voltage, ready_current);
+    ESP_LOGI(FUSB302_TAG, "PD attached at PPS mode with voltage: %d mV, current: %d mA", ready_voltage, ready_current);
     break;
   default:
     break;
   }
 }
 
-FUSB302_ret_t FUSB302_i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count)
+inline FUSB302_ret_t FUSB302_i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count)
 {
-  //ESP_LOGI("FUSB302", "Read addr: %X, count %d", reg_addr, count);
+  //ESP_LOGI(FUSB302_TAG, "Read addr: %X, count %d", reg_addr, count);
 
   size_t result =  I2CReadRegisters(dev_addr, reg_addr, data, count);
   
-  //ESP_LOGI("FUSB302", "Read finished");
+  //ESP_LOGI(FUSB302_TAG, "Read finished");
 
   return result == count ? FUSB302_SUCCESS : FUSB302_ERR_READ_DEVICE;
 }
 
-FUSB302_ret_t FUSB302_i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count)
+inline FUSB302_ret_t FUSB302_i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count)
 {
-  //ESP_LOGI("FUSB302", "Write addr: %X, count %d", reg_addr, count);
+  //ESP_LOGI(FUSB302_TAG, "Write addr: %X, count %d", reg_addr, count);
 
   size_t result =  I2CWriteRegisters(dev_addr, reg_addr, data, count);
   
-  //ESP_LOGI("FUSB302", "Write finished");
+  //ESP_LOGI(FUSB302_TAG, "Write finished");
 
   return result == count ? FUSB302_SUCCESS : FUSB302_ERR_WRITE_DEVICE;
 }
 
-FUSB302_ret_t FUSB302_delay_ms(uint32_t t)
+inline FUSB302_ret_t FUSB302_delay_ms(uint32_t t)
 {
   delay(t);
 

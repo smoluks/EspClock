@@ -15,5 +15,6 @@
 #define WHITE565    0xFFFF
 
 void HUB75Init();
-void HUB75TestScreen();
 void HUB75SetBrigthness(uint8_t brightness);
+void HUB75DecreaseBrigthnessLimit();
+void HUB75ResetBrigthnessLimit();

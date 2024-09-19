@@ -21,6 +21,9 @@ void setup()
   }
   ESP_LOGI("firmware", "Chip ID: 0x%X", chipId);
 
+  voltageInit();
+  CurrentInit();
+  PowerControllerInit();
   I2CInit();
   FUSB302Init();
   xTaskCreatePinnedToCore(
@@ -35,8 +38,7 @@ void setup()
   loadSettings();
 
   lightInit();
-  voltageInit();
-  CurrentInit();
+
   DY1703Init();
 
   HUB75Init();
@@ -61,12 +63,11 @@ void loop()
      ESP_LOGI("firmware", "Free RAM: %d bytes", current_free_heap_size);
   }
 #endif
-
+  CheckPowerLimit();
+  
   lightLoop();
   voltageLoop();
-  CurrentLoop();
   TouchLoop();
-
   WiFiLoop();
   //WebServerLoop();
 

@@ -14,6 +14,7 @@
 #include "../controllers/clockController.cpp"
 #include "../controllers/co2Controller.cpp"
 #include "../controllers/systickController.cpp"
+#include "../controllers/powerController.cpp"
 //#include "../controllers/webController.cpp"
 //hardware
 #include "../hardware/bme280.cpp"

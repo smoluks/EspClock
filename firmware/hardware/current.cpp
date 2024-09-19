@@ -1,6 +1,8 @@
 #include "h/adc_LUT.hpp"
-#include "h/fusb302.hpp"
+#include "h/current.hpp"
 #include "../h/hardware.hpp"
+
+static const char *CURRENT_TAG = "Current";
 
 void CurrentInit()
 {
@@ -8,25 +10,21 @@ void CurrentInit()
     analogSetPinAttenuation(CURRENT_PIN, ADC_0db);
 }
 
-uint32_t current_raw = 0;
-uint8_t current_count = 0;
-void CurrentLoop()
+static uint32_t current_raw = 0;
+static uint8_t current_count = 0;
+int16_t CurrentLoop()
 {
     current_raw += analogRead(CURRENT_PIN);
-    if(++current_count < 64)
+    if(++current_count != 64)
     {
-        return;
+        return -1;
     }
-    current_count = 0;
-    
-    current_raw = current_raw / 64;
-    float value = ADC_LUT_FLOAT[current_raw] / 1.963134918;
-    ESP_LOGV("Current", "current: %f mA", value);
-    
-    if(value > GetPermittedUSBCurrent())
-    {
-        ESP_LOGE("Current", "Current overload: permitted %d mA, real %f mA", GetPermittedUSBCurrent(), value);
-    }
+    current_count = 0;    
+    current_raw = current_raw >> 6;
+
+    float value = ADC_LUT_FLOAT[current_raw] * ADC_TO_mA_COEF;
+    ESP_LOGV(CURRENT_TAG, "current: %f mA", value);  
 
     current_raw = 0;
+    return value;
 }
