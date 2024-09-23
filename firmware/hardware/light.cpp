@@ -9,14 +9,15 @@ void lightInit()
 {
     pinMode(LIGHT_ANALOG_PIN, ANALOG);
 
+    //TODO: move to controller
     if(!settings.light_auto)
     {
         HUB75SetBrigthness(settings.light_level);
     }
 }
 
-uint32_t raw = 0;
-uint16_t count = 0;
+static uint32_t raw = 0;
+static uint16_t count = 0;
 void lightLoop()
 {
     if(!settings.light_auto)

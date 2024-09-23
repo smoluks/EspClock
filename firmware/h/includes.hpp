@@ -10,11 +10,11 @@
 //because Arduino IDE doesn't support auto link files in source folders
 //if anybody has any ideas, please dm me
 //controllers
-#include "../controllers/envSensorsController.cpp"
-#include "../controllers/clockController.cpp"
-#include "../controllers/co2Controller.cpp"
-#include "../controllers/systickController.cpp"
-#include "../controllers/powerController.cpp"
+#include "../controllers/airInternal.cpp"
+#include "../controllers/clock.cpp"
+#include "../controllers/co2.cpp"
+#include "../controllers/systick.cpp"
+#include "../controllers/power.cpp"
 //#include "../controllers/webController.cpp"
 //hardware
 #include "../hardware/bme280.cpp"

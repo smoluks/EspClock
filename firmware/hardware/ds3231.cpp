@@ -11,9 +11,11 @@
 #define DS3231_REG_CONTROL_CONV (1 << 5)
 #define DS3231_REG_STATUS 0x0F
 
-bool trySetTime(DateTime time);
-void readTime();
-uint8_t readSeconds();
+void (*DS3231TimeChangedHandler)(DateTime value);
+
+static bool trySetTime(DateTime time);
+static void readTime();
+static uint8_t readSeconds();
 
 static const char *DS3231_TAG = "DS3231";
 
@@ -112,7 +114,13 @@ void readTime()
     DS3231_current_time.year = BCDToDec(result[6]);
     DS3231_time_is_ready = true;
 
+    if(DS3231TimeChangedHandler != nullptr)
+    {
+        DS3231TimeChangedHandler(DS3231_current_time);
+    }
+
     raw_seconds = result[0];
+
     ESP_LOGV(DS3231_TAG, "DS3231 time %X:%X:%X", result[2], result[1], result[0]);
 }
 

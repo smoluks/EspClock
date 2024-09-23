@@ -1,4 +1,4 @@
-#include "h/systickController.hpp"
+#include "h/systick.hpp"
 
 //get current time in uS
 inline timestamp_uS_t GetTimestamp()

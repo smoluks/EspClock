@@ -1,14 +1,39 @@
 #include <WiFiUdp.h>
 #include <NTPClient.h>
-#include "h/clockController.hpp"
+#include "h/clock.hpp"
 #include "../helpers/h/unixTimeConverter.hpp"
 #include "../h/settings.hpp"
 
 extern settings_t settings;
+extern void (*DS3231TimeChangedHandler)(DateTime value);
+
+static bool isTimePresent = false;
+static bool isTimeUpdated = false;
+static DateTime current_time;
+inline void timeChangedHandler(DateTime value)
+{
+    isTimePresent = true;
+    isTimeUpdated = true;
+    current_time = value;
+}
+
+inline void ClockInit()
+{
+    DS3231TimeChangedHandler = timeChangedHandler;
+}
 
 inline bool IsTimePresent()
 {
-    return DS3231TimeIsReady();
+    return isTimePresent;
+}
+
+inline bool IsTimeUpdated()
+{
+    if(isTimeUpdated)
+    {
+        isTimeUpdated = false;
+        return true;
+    } else return false;
 }
 
 inline DateTime GetCurrentTime()

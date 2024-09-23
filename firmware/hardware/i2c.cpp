@@ -1,16 +1,17 @@
 #include <Wire.h>
 #include "h/i2c.hpp"
 #include "../h/hardware.hpp"
+#include "../controllers/h/systick.hpp"
+
+static const char *I2C_TAG = "I2C";
 
 bool I2CInit()
 {
-    if (!Wire.begin(SDA_PIN, SCL_PIN, 400000))
+    if (!Wire.begin(SDA_PIN, SCL_PIN, 100000))
     {
-        ESP_LOGE("I2C", "I2C init error");
+        ESP_LOGE(I2C_TAG, "I2C init error");
         return false;
     }
-
-    Wire.setTimeOut(100);
 
     return true;
 }
@@ -26,7 +27,7 @@ size_t I2CReadBulk(uint8_t address, uint8_t *buffer, uint8_t length)
     uint8_t size = Wire.requestFrom(address, length);
     if (size != length)
     {
-        ESP_LOGW("I2C", "I2C read count error, expected %d, real %d, device %X", length, size, address);
+        ESP_LOGW(I2C_TAG, "I2C read count error, expected %d, real %d, device %X", length, size, address);
         return size;
     }
 
@@ -39,7 +40,7 @@ size_t I2CReadBulk(uint8_t address, uint8_t *buffer, uint8_t length)
     return size;
 }
 
-size_t I2CReadRegister(uint8_t address, uint8_t reg, uint8_t* value)
+size_t I2CReadRegister(uint8_t address, uint8_t reg, uint8_t *value)
 {
     // Write address of register
     Wire.beginTransmission(address);
@@ -50,7 +51,7 @@ size_t I2CReadRegister(uint8_t address, uint8_t reg, uint8_t* value)
     uint8_t size = Wire.requestFrom(address, (uint8_t)1);
     if (size != 1)
     {
-        ESP_LOGW("I2C", "I2C read register error, expected %d, real %d, device %X", 1, size, address);
+        ESP_LOGW(I2C_TAG, "I2C read register error, expected %d, real %d, device %X", 1, size, address);
         return size;
     }
 
@@ -70,7 +71,7 @@ size_t I2CReadRegisters(uint8_t address, uint8_t startReg, uint8_t *buffer, uint
     uint8_t size = Wire.requestFrom(address, length);
     if (size != length)
     {
-        ESP_LOGW("I2C", "I2C read count error, expected %d, real %d, device %X", length, size, address);
+        ESP_LOGW(I2C_TAG, "I2C read count error, expected %d, real %d, device %X", length, size, address);
         return size;
     }
 
@@ -113,48 +114,84 @@ size_t I2CWriteRegisters(uint8_t address, uint8_t startReg, uint8_t *buffer, uin
     return result;
 }
 
-bool ModbusOverI2CWriteSingleCoil(uint8_t addr, uint16_t reg, bool value)
+int32_t ModbusOverI2CWriteSingleCoil(uint8_t addr, uint16_t reg, bool value)
 {
     Wire.beginTransmission(addr);
 
-    if(
-        !Wire.write(MODBUS_WRITE_COIL) &&
-        !Wire.write(reg >> 8) &&
-        !Wire.write(reg & 0xFF) &&
-        !Wire.write(value ? 0xFF : 0x00) &&
-        !Wire.write(0x00))
-    return false;
+    bool result =
+        Wire.write(MODBUS_WRITE_COIL) &&
+        Wire.write(byte(reg >> 8)) &&
+        Wire.write(byte(reg & 0xFF)) &&
+        Wire.write(value ? 0xFF : 0x00) &&
+        !Wire.write(0x00);
 
     Wire.endTransmission();
 
-    return true;
+    if (!result)
+    {
+        return -2;
+    }
+
+    return 0;
 }
 
 int32_t ModbusOverI2CRead(uint8_t addr, uint16_t reg)
 {
+    Wire.flush();
+    Wire.setTimeOut(1000);
+    delay(10);
+
     Wire.beginTransmission(addr);
-    if(
-        !Wire.write(MODBUS_READ_INPUT) &&
-        !Wire.write(addr >> 8) &&
-        !Wire.write(addr & 0xFF) &&
-        !Wire.write(0x00) &&
-        !Wire.write(0x01))
-    return -2;
-    
+    bool result = (Wire.write(MODBUS_READ_INPUT) &&
+                   Wire.write(byte(reg >> 8)) &&
+                   Wire.write(byte(reg & 0xFF)) &&
+                   Wire.write(0x00) &&
+                   Wire.write(0x01));
     Wire.endTransmission();
+
+    if (!result)
+    {
+        return -2;
+    }
 
     delay(10);
 
-    if (Wire.requestFrom(addr, (uint8_t)4) != 4)
+    if (Wire.requestFrom(addr, 2, false) < 2)
     {
-        ESP_LOGW("T6703", "T6703 read failed, address 0x%X", addr);
+        ESP_LOGW(I2C_TAG, "Modbus read failed, address 0x%X", addr);
         return -1;
     }
+    uint8_t command = Wire.read();
+    uint8_t size = Wire.read();
 
-    uint8_t result[4];
-    result[0] = Wire.read();
-    result[1] = Wire.read();
-    result[2] = Wire.read();
-    result[3] = Wire.read();
-    return ((result[2] << 8) | result[3]);
+    if (command != MODBUS_READ_INPUT)
+    {
+        ESP_LOGW(I2C_TAG, "Modbus read failed, received command 0x%X, payload:", command);
+
+        Wire.requestFrom(addr, size, true);
+        for (uint8_t i = 0; i < size; i++)
+        {
+            ESP_LOGW(I2C_TAG, "0x%X", (byte)Wire.read());
+        }
+
+        return -3;
+    }
+    if (size != 2) // length
+    {
+        ESP_LOGW(I2C_TAG, "Modbus read failed, received length 0x%d, payload:", size);
+
+        Wire.requestFrom(addr, size, true);
+        for (uint8_t i = 0; i < size; i++)
+        {
+            ESP_LOGW(I2C_TAG, "0x%X", (byte)Wire.read());
+        }
+
+        return -4;
+    }
+
+    Wire.requestFrom(addr, 2, true);
+    uint8_t high_byte = Wire.read();
+    uint8_t low_byte = Wire.read();
+
+    return ((high_byte << 8) | low_byte);
 }

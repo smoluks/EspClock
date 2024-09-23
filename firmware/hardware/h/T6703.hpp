@@ -18,5 +18,22 @@
 #define T67XX_READ_DELAY 10
 #define T67XX_MEASURE_DELAY 2250
 
+#define T67XX_ERROR_CONDITION   1 << 0
+#define T67XX_ERROR_FLASH       1 << 1
+#define T67XX_ERROR_CALIBRATION 1 << 2
+//#DEFINE T67XX_ERROR_NA        1 << 3
+//#DEFINE T67XX_ERROR_NA        1 << 4
+//#DEFINE T67XX_ERROR_NA        1 << 5
+//#DEFINE T67XX_ERROR_NA        1 << 6
+//#DEFINE T67XX_ERROR_NA        1 << 7
+#define T67XX_ERROR_RS232       1 << 8
+#define T67XX_ERROR_RS485       1 << 9
+#define T67XX_ERROR_I2C         1 << 10
+#define T67XX_ERROR_WARMUP      1 << 11
+//#DEFINE T67XX_ERROR_NA        1 << 12
+//#DEFINE T67XX_ERROR_NA        1 << 13
+//#DEFINE T67XX_ERROR_NA        1 << 14
+#define T67XX_ERROR_SINGLEPOINTCALIBRATION 1 << 15
+
 inline void T6703Init();
 inline void T6703Loop();

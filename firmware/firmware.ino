@@ -23,7 +23,11 @@ void setup()
 
   voltageInit();
   CurrentInit();
-  PowerControllerInit();
+
+  PowerInit();
+  ClockInit();
+  CO2Init();
+  
   I2CInit();
   FUSB302Init();
   xTaskCreatePinnedToCore(

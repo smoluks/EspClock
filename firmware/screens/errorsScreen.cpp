@@ -1,5 +1,5 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
-#include "../controllers/h/systickController.hpp"
+#include "../controllers/h/systick.hpp"
 #include "../managers/h/errorManager.hpp"
 #include "../hardware/h/hub75.hpp"
 #include "h/screenCommon.hpp"

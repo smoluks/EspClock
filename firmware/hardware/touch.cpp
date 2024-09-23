@@ -1,9 +1,9 @@
 #include "../h/prototheads.hpp"
 #include "h/touch.hpp"
 #include "../h/hardware.hpp"
-#include "../controllers/h/systickController.hpp"
+#include "../controllers/h/systick.hpp"
 
-static const char *TOUCH_TAG = "touch";
+static const char *TOUCH_TAG = "Touch";
 
 void processTouch();
 void processUntouch();
@@ -57,6 +57,9 @@ uint8_t TouchLoop()
 inline void processTouch()
 {
     ESP_LOGI(TOUCH_TAG, "touched");
+
+    if(is_touched)
+        return;
 
     is_touched = true;
     touch_timestamp = GetTimestamp();

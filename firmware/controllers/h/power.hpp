@@ -1,4 +1,4 @@
 #pragma once 
 
-void PowerControllerInit();
+void PowerInit();
 void CheckPowerLimit();

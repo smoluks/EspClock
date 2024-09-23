@@ -7,27 +7,27 @@ extern BME280_SensorMeasurements BME280Measurements;
 extern bool BME280_results_ready;
 extern uint8_t BME280_id;
 
-inline bool IsTemperaturePresent()
+inline bool IsInternalTemperaturePresent()
 {
     return BME280_results_ready;
 }
 
-inline bool IsPressurePresent()
+inline bool IsInternalPressurePresent()
 {
     return BME280_results_ready;
 }
 
-inline bool IsHumidityPresent()
+inline bool IsInternalHumidityPresent()
 {
     return BME280_id == BME280_ID && BME280_results_ready;
 }
 
-inline float GetTemperature()
+inline float GetInternalTemperature()
 {
     return BME280Measurements.temperature;
 }
 
-inline float GetPressure()
+inline float GetInternalPressure()
 {
     return BME280Measurements.pressure / 100;
 }
@@ -37,7 +37,7 @@ inline float GetPressure()
 //     return bme.readAltitude(SEALEVELPRESSURE_HPA);
 // }
 
-inline float GetHumidity()
+inline float GetInternalHumidity()
 {
     return BME280Measurements.humidity;
 }

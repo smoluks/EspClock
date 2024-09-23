@@ -1,8 +1,8 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include "../hardware/h/hub75.hpp"
-#include "../controllers/h/envSensorsController.hpp"
-#include "../controllers/h/co2Controller.hpp"
-#include "../controllers/h/systickController.hpp"
+#include "../controllers/h/airInternal.hpp"
+#include "../controllers/h/co2.hpp"
+#include "../controllers/h/systick.hpp"
 #include "../hardware/h/touch.hpp"
 #include "h/screenCommon.hpp"
 #include "h/sensorsScreen.hpp"
@@ -33,6 +33,7 @@ screen_action_t sensorsScreenLoop()
 {
     if (sensorsScreenIsSingleTap || (!isLocked && IsTimeout(sensor_screen_close_timestamp)))
     {
+        isLocked = false;
         sensorsScreenIsSingleTap = false;
         SingleTapHandler = NULL;
         HoldTapHandler = NULL;
@@ -56,17 +57,17 @@ screen_action_t sensorsScreenLoop()
 
     dma_display->setTextColor(GREEN565);
     dma_display->setCursor(1, 0);
-    IsTemperaturePresent() ? dma_display->print(GetTemperature()) : dma_display->print("-");
+    IsInternalTemperaturePresent() ? dma_display->print(GetInternalTemperature()) : dma_display->print("-");
     dma_display->print(" C");
 
     dma_display->setTextColor(MAGENTA565);
     dma_display->setCursor(5, 8);
-    IsPressurePresent() ? dma_display->print(GetPressure(), 0) : dma_display->print("-");
+    IsInternalPressurePresent() ? dma_display->print(GetInternalPressure(), 0) : dma_display->print("-");
     dma_display->print(" hPa");
 
     dma_display->setTextColor(BLUE565);
     dma_display->setCursor(1, 16);
-    IsHumidityPresent() ? dma_display->print(GetHumidity()) : dma_display->print("-");
+    IsInternalHumidityPresent() ? dma_display->print(GetInternalHumidity()) : dma_display->print("-");
     dma_display->print(" %");
 
     if (IsCO2Present())

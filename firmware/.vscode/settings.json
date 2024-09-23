@@ -31,7 +31,8 @@
         "new": "cpp",
         "stdexcept": "cpp",
         "typeinfo": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "esp_netif_sntp.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

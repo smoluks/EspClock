@@ -18,7 +18,7 @@ static void powerChangedHandler(status_power_e status, uint16_t voltage, uint16_
     current_limit = current;
 }
 
-void PowerControllerInit()
+void PowerInit()
 {
     PowerChangedHandler = powerChangedHandler;
 }

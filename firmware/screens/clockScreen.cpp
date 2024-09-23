@@ -1,8 +1,8 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include "../hardware/h/hub75.hpp"
 #include "../hardware/h/touch.hpp"
-#include "../controllers/h/clockController.hpp"
-#include "../controllers/h/co2Controller.hpp"
+#include "../controllers/h/clock.hpp"
+#include "../controllers/h/co2.hpp"
 #include "h/screenCommon.hpp"
 #include "h/clockScreen.hpp"
 
