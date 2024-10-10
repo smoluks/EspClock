@@ -8,7 +8,6 @@
 
 void moveCursor();
 void clockScreenSingleTapHandler();
-const char *GetDayOfWeekUserName(uint8_t day);
 
 extern MatrixPanel_I2S_DMA *dma_display;
 extern void (*SingleTapHandler)();
@@ -18,6 +17,8 @@ static uint8_t current_y;
 static int8_t speed_x;
 static int8_t speed_y;
 static bool clockScreenIsSingleTap;
+static const char* DaysOfWeek[] = { NULL, "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "MON", "SUN" };
+
 void clockScreenInit()
 {
     current_x = random(5);
@@ -75,7 +76,7 @@ screen_action_t clockScreenLoop()
         dma_display->setCursor(0, 25);
         dma_display->setTextColor(BLUE565);
         dma_display->setTextSize(1);
-        dma_display->print(GetDayOfWeekUserName(currentTime.dayOfWeek));
+        dma_display->print(DaysOfWeek[currentTime.dayOfWeek]);
 
         //-----Date-----
         const char date[6] = {
@@ -102,29 +103,6 @@ screen_action_t clockScreenLoop()
     }
 
     return SCREEN_ACTION_NOTHING;
-}
-
-const char *GetDayOfWeekUserName(uint8_t day)
-{
-    switch (day)
-    {
-    case 1:
-        return "SUN";
-    case 2:
-        return "MON";
-    case 3:
-        return "TUE";
-    case 4:
-        return "WED";
-    case 5:
-        return "THU";
-    case 6:
-        return "FRI";
-    case 7:
-        return "SAT";
-    default:
-        return "";
-    }
 }
 
 void moveCursor()
