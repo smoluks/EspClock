@@ -21,6 +21,4 @@ Sensors: BME280, T6703
 
 IDE: VSCODE with Arduino (https://marketplace.visualstudio.com/items?itemName=vscode-arduino.vscode-arduino-community) plugin
 
-PCB software: DipTrace 4. There is a non-official unknown condition license for non-commercial development:
-  - User name:	Для некоммерческого использования
-  - Reg. key:	H2W2-6K9A-PS2F-H3L5-SSW1
+PCB software: DipTrace 4
