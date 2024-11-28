@@ -9,7 +9,7 @@
 void moveCursor();
 void clockScreenSingleTapHandler();
 
-extern MatrixPanel_I2S_DMA *dma_display;
+extern MatrixPanel_I2S_DMA *dmaDisplay;
 extern void (*SingleTapHandler)();
 
 static uint8_t current_x;
@@ -47,13 +47,13 @@ screen_action_t clockScreenLoop()
         return SCREEN_ACTION_NOTHING;
     clock_page_show_timestamp = millis();
 
-    dma_display->fillScreenRGB888(0, 0, 0);
+    dmaDisplay->fillScreenRGB888(0, 0, 0);
 
     if (!IsTimePresent())
     {
-        dma_display->setTextColor(GREEN565);
-        dma_display->setTextSize(1);
-        dma_display->print("Loading...");
+        dmaDisplay->setTextColor(GREEN565);
+        dmaDisplay->setTextSize(1);
+        dmaDisplay->print("Loading...");
     }
     else
     {
@@ -68,15 +68,15 @@ screen_action_t clockScreenLoop()
 
         //-----Time-----
         moveCursor();
-        dma_display->setTextColor(GREEN565);
-        dma_display->setTextSize(2);
-        dma_display->print(time);
+        dmaDisplay->setTextColor(GREEN565);
+        dmaDisplay->setTextSize(2);
+        dmaDisplay->print(time);
 
         //-----Week day-----
-        dma_display->setCursor(0, 25);
-        dma_display->setTextColor(BLUE565);
-        dma_display->setTextSize(1);
-        dma_display->print(DaysOfWeek[currentTime.dayOfWeek]);
+        dmaDisplay->setCursor(0, 25);
+        dmaDisplay->setTextColor(BLUE565);
+        dmaDisplay->setTextSize(1);
+        dmaDisplay->print(DaysOfWeek[currentTime.dayOfWeek]);
 
         //-----Date-----
         const char date[6] = {
@@ -87,19 +87,19 @@ screen_action_t clockScreenLoop()
             0x30 + currentTime.month % 10,
             0};
 
-        dma_display->setCursor(34, 25);
-        dma_display->setTextColor(RED565);
-        dma_display->setTextSize(1);
-        dma_display->print(date);
+        dmaDisplay->setCursor(34, 25);
+        dmaDisplay->setTextColor(RED565);
+        dmaDisplay->setTextSize(1);
+        dmaDisplay->print(date);
     }
 
     //-----CO2 Warning-----
     if (IsCO2Present())
     {
         if (GetCO2Value() > 1000)
-            dma_display->drawPixel(63, 0, RED565);
+            dmaDisplay->drawPixel(63, 0, RED565);
         else if (GetCO2Value() > 750)
-            dma_display->drawPixel(63, 0, ORANGE565);
+            dmaDisplay->drawPixel(63, 0, ORANGE565);
     }
 
     return SCREEN_ACTION_NOTHING;
@@ -107,7 +107,7 @@ screen_action_t clockScreenLoop()
 
 void moveCursor()
 {
-    dma_display->setCursor(current_x, current_y);
+    dmaDisplay->setCursor(current_x, current_y);
 
     if (current_x + speed_x > 4 || current_x + speed_x < 0)
     {

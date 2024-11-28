@@ -9,7 +9,7 @@
 static const char *HUB75_TAG = "HUB75";
 
 extern settings_t settings;
-MatrixPanel_I2S_DMA *dma_display = nullptr;
+MatrixPanel_I2S_DMA *dmaDisplay = nullptr;
 
 // Module configuration
 static HUB75_I2S_CFG::i2s_pins _pins = {R1_PIN, G1_PIN, B1_PIN, R2_PIN, G2_PIN, B2_PIN, A_PIN, B_PIN, C_PIN, D_PIN, E_PIN, LAT_PIN, OE_PIN, CLK_PIN};
@@ -24,26 +24,26 @@ static HUB75_I2S_CFG mxconfig(
     DEFAULT_LAT_BLANKING,            // How many clock cycles to blank OE before/after LAT signal change, default is 2 clocks
     false,                           // clock phase
     60,                              // _min_refresh_rate
-    PIXEL_COLOR_DEPTH_BITS_DEFAULT); // _pixel_color_depth_bits
+    2); // _pixel_color_depth_bits
 static uint8_t maximum_brigthness = 255;
 void HUB75Init()
 {
   ESP_LOGI(HUB75_TAG, "HUB75 init started");
 
-  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
-  dma_display->begin();
+  dmaDisplay = new MatrixPanel_I2S_DMA(mxconfig);
+  dmaDisplay->begin();
 
   HUB75SetBrigthness(50);
 
-  dma_display->fillScreenRGB888(128, 0, 0);
+  dmaDisplay->fillScreenRGB888(128, 0, 0);
   delay(500);
-  dma_display->fillScreenRGB888(0, 0, 128);
+  dmaDisplay->fillScreenRGB888(0, 0, 128);
   delay(500);
-  dma_display->fillScreenRGB888(0, 128, 0);
+  dmaDisplay->fillScreenRGB888(0, 128, 0);
   delay(500);
-  dma_display->fillScreenRGB888(255, 255, 255);
+  dmaDisplay->fillScreenRGB888(255, 255, 255);
   delay(500);
-  dma_display->fillScreenRGB888(0, 0, 0);
+  dmaDisplay->fillScreenRGB888(0, 0, 0);
 
   if(!settings.light_auto)
     HUB75SetBrigthness(settings.light_level);
@@ -65,14 +65,14 @@ void HUB75SetBrigthness(uint8_t brightness)
     brightness = MIN_BRIGHTNESS;
   }
 
-  dma_display->setBrightness(brightness);
+  dmaDisplay->setBrightness(brightness);
   current_brigthness = brightness;
 }
 
 void HUB75DecreaseBrigthnessLimit()
 {
   maximum_brigthness = current_brigthness - 2;
-  dma_display->setBrightness(maximum_brigthness);
+  dmaDisplay->setBrightness(maximum_brigthness);
 }
 
 void HUB75ResetBrigthnessLimit()

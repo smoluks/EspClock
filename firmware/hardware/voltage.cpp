@@ -1,4 +1,4 @@
-#include "h/adc_LUT.hpp"
+#include "h/adcLUT.hpp"
 #include "../h/hardware.hpp"
 
 static const char *VOLTAGE_TAG = "Voltage";

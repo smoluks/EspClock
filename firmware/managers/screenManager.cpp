@@ -2,6 +2,7 @@
 #include "../screens/h/clockScreen.hpp"
 #include "../screens/h/errorsScreen.hpp"
 #include "../screens/h/effectsScreen.hpp"
+#include "../screens/h/externalScreen.hpp"
 #include "../screens/h/screenCommon.hpp"
 #include "../managers/h/errorManager.hpp"
 #include "h/screenManager.hpp"
@@ -13,11 +14,11 @@ static enum screens_e
     timeScreen,
     sensorsScreen,
     errorScreen,
-    effectsScreen
+    externalScreen
 } current_screen;
 
-static void (*initFns[])() = {NULL, &clockScreenInit, &sensorsScreenInit, &errorScreenInit, &effectsScreenInit};
-static screen_action_t (*loopFns[])() = {NULL, &clockScreenLoop, &sensorsScreenLoop, &errorScreenLoop, &effectsScreenLoop};
+static void (*initFns[])() = {NULL, &clockScreenInit, &sensorsScreenInit, &errorScreenInit, &externalScreenInit};
+static screen_action_t (*loopFns[])() = {NULL, &clockScreenLoop, &sensorsScreenLoop, &errorScreenLoop, &externalScreenLoop};
 
 void moveToScreen(enum screens_e screen);
 void checkChangeConditions();
@@ -44,6 +45,9 @@ void screenManagerLoop()
                 moveToScreen(sensorsScreen);
                 break;
             case sensorsScreen:
+                moveToScreen(externalScreen);
+                break;
+            case externalScreen:
                 moveToScreen(timeScreen);
                 break;
             default:

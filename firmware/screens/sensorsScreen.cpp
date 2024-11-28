@@ -2,7 +2,7 @@
 #include "../hardware/h/hub75.hpp"
 #include "../controllers/h/airInternal.hpp"
 #include "../controllers/h/co2.hpp"
-#include "../controllers/h/systick.hpp"
+#include "../hardware/h/systick.hpp"
 #include "../hardware/h/touch.hpp"
 #include "h/screenCommon.hpp"
 #include "h/sensorsScreen.hpp"
@@ -10,20 +10,20 @@
 extern void (*SingleTapHandler)();
 extern void (*HoldTapHandler)();
 
-static timestamp_uS_t sensor_screen_show_timestamp = 0;
-static timestamp_uS_t sensor_screen_close_timestamp = 0;
-static bool isLocked = false;
+static timestamp_uS_t sensorsScreenShowTimestamp = 0;
+static timestamp_uS_t sensorsScreenCloseTimestamp = 0;
+static bool sensorsScreenIsLocked = false;
 static bool sensorsScreenIsSingleTap = false;
-extern MatrixPanel_I2S_DMA *dma_display;
+extern MatrixPanel_I2S_DMA *dmaDisplay;
 
 void sensorsScreenSingleTapHandler() { sensorsScreenIsSingleTap = true; }
-void sensorsScreenHoldTapHandler() { isLocked = !isLocked; }
+void sensorsScreenHoldTapHandler() { sensorsScreenIsLocked = !sensorsScreenIsLocked; }
 
 void sensorsScreenInit()
 {
-    sensor_screen_close_timestamp = GetTimestamp(SENSORS_SCREEN_SHOW_TIME * 1000);
-    sensor_screen_show_timestamp = GetTimestamp(-1);
-    dma_display->setTextSize(1);
+    sensorsScreenCloseTimestamp = GetTimestamp(SENSORS_SCREEN_SHOW_TIME * 1000);
+    sensorsScreenShowTimestamp = GetTimestamp(-1);
+    dmaDisplay->setTextSize(1);
 
     SingleTapHandler = sensorsScreenSingleTapHandler;
     HoldTapHandler = sensorsScreenHoldTapHandler;
@@ -31,9 +31,19 @@ void sensorsScreenInit()
 
 screen_action_t sensorsScreenLoop()
 {
-    if (sensorsScreenIsSingleTap || (!isLocked && IsTimeout(sensor_screen_close_timestamp)))
+    if (sensorsScreenIsSingleTap)
     {
-        isLocked = false;
+        sensorsScreenIsLocked = false;
+        sensorsScreenIsSingleTap = false;
+        SingleTapHandler = NULL;
+        HoldTapHandler = NULL;
+
+        return SCREEN_ACTION_GO_TO_NEXT;
+    }        
+
+    if (!sensorsScreenIsLocked && IsTimeout(sensorsScreenCloseTimestamp))
+    {
+        sensorsScreenIsLocked = false;
         sensorsScreenIsSingleTap = false;
         SingleTapHandler = NULL;
         HoldTapHandler = NULL;
@@ -41,41 +51,41 @@ screen_action_t sensorsScreenLoop()
         return SCREEN_ACTION_GO_TO_DEFAULT;
     }        
 
-    if (!IsTimeout(sensor_screen_show_timestamp))
+    if (!IsTimeout(sensorsScreenShowTimestamp))
         return SCREEN_ACTION_NOTHING;
 
-    sensor_screen_show_timestamp = GetTimestamp(SENSORS_SCREEN_REFRESH_PERIOD * 1000);
+    sensorsScreenShowTimestamp = GetTimestamp(SENSORS_SCREEN_REFRESH_PERIOD * 1000);
 
-    dma_display->fillScreenRGB888(0, 0, 0);
+    dmaDisplay->fillScreenRGB888(0, 0, 0);
 
-    if(isLocked)
+    if(sensorsScreenIsLocked)
     {
-        dma_display->setTextColor(RED565);
-        dma_display->setCursor(57, 0);
-        dma_display->print("L");
+        dmaDisplay->setTextColor(RED565);
+        dmaDisplay->setCursor(57, 0);
+        dmaDisplay->print("L");
     }
 
-    dma_display->setTextColor(GREEN565);
-    dma_display->setCursor(1, 0);
-    IsInternalTemperaturePresent() ? dma_display->print(GetInternalTemperature()) : dma_display->print("-");
-    dma_display->print(" C");
+    dmaDisplay->setTextColor(GREEN565);
+    dmaDisplay->setCursor(1, 0);
+    IsInternalTemperaturePresent() ? dmaDisplay->print(GetInternalTemperature()) : dmaDisplay->print("-");
+    dmaDisplay->print(" C");
 
-    dma_display->setTextColor(MAGENTA565);
-    dma_display->setCursor(5, 8);
-    IsInternalPressurePresent() ? dma_display->print(GetInternalPressure(), 0) : dma_display->print("-");
-    dma_display->print(" hPa");
+    dmaDisplay->setTextColor(MAGENTA565);
+    dmaDisplay->setCursor(5, 8);
+    IsInternalPressurePresent() ? dmaDisplay->print(GetInternalPressure(), 0) : dmaDisplay->print("-");
+    dmaDisplay->print(" hPa");
 
-    dma_display->setTextColor(BLUE565);
-    dma_display->setCursor(1, 16);
-    IsInternalHumidityPresent() ? dma_display->print(GetInternalHumidity()) : dma_display->print("-");
-    dma_display->print(" %");
+    dmaDisplay->setTextColor(BLUE565);
+    dmaDisplay->setCursor(1, 16);
+    IsInternalHumidityPresent() ? dmaDisplay->print(GetInternalHumidity()) : dmaDisplay->print("-");
+    dmaDisplay->print(" %");
 
     if (IsCO2Present())
     {
-        dma_display->setTextColor(WHITE565);
-        dma_display->setCursor(5, 24);
-        dma_display->print(GetCO2Value());
-        dma_display->print(" PPM");
+        dmaDisplay->setTextColor(WHITE565);
+        dmaDisplay->setCursor(5, 24);
+        dmaDisplay->print(GetCO2Value());
+        dmaDisplay->print(" PPM");
     }
 
     return SCREEN_ACTION_NOTHING;

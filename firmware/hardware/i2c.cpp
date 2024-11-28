@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include "h/i2c.hpp"
+#include "h/systick.hpp"
 #include "../h/hardware.hpp"
-#include "../controllers/h/systick.hpp"
 
 static const char *I2C_TAG = "I2C";
 

@@ -41,18 +41,19 @@ void setup()
 
   loadSettings();
 
+  TouchInit();
   lightInit();
-
   DY1703Init();
+  WirelessInit();
+  
+  ExternalSensorsInit();
 
   HUB75Init();
-
-  WiFiInit();
-
+ 
   ESP_LOGI("main", "Init complete");
 }
 
-uint32_t free_heap_size = 64000;
+uint32_t free_heap_size = 10000;
 void loop()
 {
   // if (getTimePassedFrom(firmware_loop_timestamp) > 10)
@@ -64,17 +65,18 @@ void loop()
   if(current_free_heap_size < free_heap_size)
   {
      free_heap_size = current_free_heap_size;
-     ESP_LOGI("firmware", "Free RAM: %d bytes", current_free_heap_size);
+     ESP_LOGE("firmware", "Free RAM: %d bytes", current_free_heap_size);
   }
 #endif
+
   CheckPowerLimit();
   
   lightLoop();
   voltageLoop();
   TouchLoop();
-  WiFiLoop();
-  //WebServerLoop();
 
+  ExternalSensorsLoop();
+  
   screenManagerLoop();
 
   delay(1); // Do esp32 internal stuff

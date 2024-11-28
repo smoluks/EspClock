@@ -27,6 +27,7 @@
 
 //TOUCH
 #define TOUCH_PIN 32
+#define TOUCH_CHANNEL TOUCH_PAD_NUM9
 
 //I2C
 #define SDA_PIN 21

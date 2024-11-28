@@ -2,10 +2,10 @@
 //Please pay attention to performance
 //We need to proceed events faster than 10ms
 #include "h/FUSB302.hpp"
+#include "h/systick.hpp"
+#include "h/i2c.hpp"
 #include "../h/hardware.hpp"
 #include "../managers/h/errorManager.hpp"
-#include "../controllers/h/systick.hpp"
-#include "../hardware/h/i2c.hpp"
 #include "../libs/FUSB302_PD_UFP_sink/src/FUSB302_UFP.h"
 #include "../libs/FUSB302_PD_UFP_sink/src/PD_UFP_Protocol.h"
 

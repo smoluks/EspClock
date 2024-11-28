@@ -175,7 +175,7 @@ public:
   	    for (int x=0; x<MATRIX_WIDTH; ++x){
 		//Serial.printf("Flushing x, y coord %d, %d\n", x, y);
     		uint16_t _pixel = XY16(x,y);
-    		dma_display->drawPixelRGB888( x, y, leds[_pixel].r, leds[_pixel].g, leds[_pixel].b);
+    		dmaDisplay->drawPixelRGB888( x, y, leds[_pixel].r, leds[_pixel].g, leds[_pixel].b);
 	    } // end loop to copy fast led to the dma matrix
 	}
   }

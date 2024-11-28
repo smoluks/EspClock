@@ -1,4 +1,4 @@
-#include "h/adc_LUT.hpp"
+#include "h/adcLUT.hpp"
 #include "h/current.hpp"
 #include "../h/hardware.hpp"
 

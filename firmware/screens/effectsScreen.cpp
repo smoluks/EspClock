@@ -18,7 +18,7 @@ Patterns patterns;
 
 void listPatterns();
 
-extern MatrixPanel_I2S_DMA *dma_display;
+extern MatrixPanel_I2S_DMA *dmaDisplay;
 
 unsigned long fps = 0, fps_timer;                // fps (this is NOT a matrix refresh rate!)
 unsigned int default_fps = 30, pattern_fps = 30; // default fps limit (this is not a matrix refresh counter!)
@@ -29,7 +29,7 @@ static const char* log_tag = "effects";
 
 void effectsScreenInit()
 { 
-  VirtualMatrixPanel* panel = new VirtualMatrixPanel(*dma_display, 1, 1, PANEL_RES_X, PANEL_RES_Y);
+  VirtualMatrixPanel* panel = new VirtualMatrixPanel(*dmaDisplay, 1, 1, PANEL_RES_X, PANEL_RES_Y);
   panel->drawDisplayTest();
   ///panel->drawChar(0, 0, 'A', 0x07E0, 0x0000, 1);
   
