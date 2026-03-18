@@ -2,4 +2,4 @@
 
 #include "../../h/settings.hpp"
 
-void loadSettings();
+void LoadSettings();

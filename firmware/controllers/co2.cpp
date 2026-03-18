@@ -1,3 +1,5 @@
+static const char *CO2_TAG = "CO2";
+
 extern void (*T6703ValueHandler)(uint16_t value);
 
 static bool co2ready = false;
@@ -10,7 +12,11 @@ static void co2ChangedHandler(uint16_t value)
 
 inline void CO2Init()
 {
+    ESP_LOGI(CO2_TAG, "CO2 init");
+
     T6703ValueHandler = co2ChangedHandler;
+
+    ESP_LOGI(CO2_TAG, "CO2 init done");
 }
 
 inline bool IsCO2Present()

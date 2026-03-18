@@ -20,7 +20,11 @@ static void powerChangedHandler(status_power_e status, uint16_t voltage, uint16_
 
 void PowerInit()
 {
+    ESP_LOGI(POWER_CONTROLLER_TAG, "Power init");
+
     PowerChangedHandler = powerChangedHandler;
+
+    ESP_LOGI(POWER_CONTROLLER_TAG, "Power init done");
 }
 
 void CheckPowerLimit()

@@ -6,8 +6,12 @@ static const char *CURRENT_TAG = "Current";
 
 void CurrentInit()
 {
+    ESP_LOGI(CURRENT_TAG, "Current init");
+
     pinMode(CURRENT_PIN, ANALOG);
     analogSetPinAttenuation(CURRENT_PIN, ADC_0db);
+
+    ESP_LOGI(CURRENT_TAG, "Current init done");
 }
 
 static uint32_t current_raw = 0;

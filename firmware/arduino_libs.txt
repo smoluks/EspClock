@@ -11,6 +11,7 @@ ESP32 HUB75 LED MATRIX PANEL DMA Display by Faptastic Version 3.0.10 https://git
 Adafruit GFX Library by Adafruit Version 1.11.9 https://github.com/adafruit/Adafruit-GFX-Library
 FastLED by Daniel Garcia Version 3.6.0  https://github.com/FastLED/FastLED
 ESPAsyncWebServer by lacamera Version 3.1.0  https://github.com/lacamera/ESPAsyncWebServer
+ArduinoJson by Benoit Blanchon <http://blog.benoitblanchon.fr/> Version 7.4.2 https://github.com/bblanchon/ArduinoJson
 
 Added using libs folder in the project folder:
 FUSB302 PD UFP sink by Kai Liebich Version 0.1.0 https://github.com/kcl93/fusb302_arduino

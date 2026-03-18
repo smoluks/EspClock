@@ -2,6 +2,6 @@
 
 settings_t settings;
 
-void loadSettings()
+void LoadSettings()
 {
 }

@@ -1,28 +1,15 @@
-#include "h/i2c.hpp"
-#include "../helpers/h/unixTimeConverter.hpp"
-#include "../managers/h/errorManager.hpp"
+#include <controllers/h/clock.hpp>
+#include <hardware/h/i2c.hpp>
+#include <managers/h/errorManager.hpp>
 
-#define BCDToDec(val) ((uint8_t)(((val) / 16 * 10) + ((val) % 16)))
-#define DecToBCD(val) ((uint8_t)(((val) / 10 * 16) + ((val) % 10)))
-
-#define DS3231_I2C_ADDR 0x68
-
-#define DS3231_REG_CONTROL 0x0E
-#define DS3231_REG_CONTROL_CONV (1 << 5)
-#define DS3231_REG_STATUS 0x0F
-
-void (*DS3231TimeChangedHandler)(DateTime value);
+static const char *DS3231_TAG = "DS3231";
 
 static bool trySetTime(DateTime time);
 static void readTime();
 static uint8_t readSeconds();
 
-static const char *DS3231_TAG = "DS3231";
-
-static DateTime DS3231_current_time;
-static bool DS3231_time_is_ready = false;
-static bool DS3231_need_update_time;
-static DateTime DS3231_time_to_update;
+static bool needUpdateTime;
+static DateTime newTime;
 
 void DS3231Init()
 {
@@ -30,7 +17,7 @@ void DS3231Init()
 
     // trying to read
     uint8_t value;
-    if (I2CReadRegister(DS3231_I2C_ADDR, DS3231_REG_STATUS, &value) != 1)
+    if (!I2CReadRegister(DS3231_I2C_ADDR, DS3231_REG_STATUS, &value))
     {
         setError(ERROR_DS3231_NOT_FOUND);
         ESP_LOGE(DS3231_TAG, "DS3231 not answered");
@@ -60,64 +47,41 @@ void DS3231Init()
 uint8_t raw_seconds;
 void DS3231Loop()
 {
-    if (DS3231_need_update_time)
+    if (needUpdateTime)
     {
-        uint8_t try_count = 0;
-        while (try_count++ < 3)
-        {
-            if (trySetTime(DS3231_time_to_update))
-            {
-                DS3231_need_update_time = false;
-                break;
-            }
-
-            delay(5);
-        }
+        trySetTime(newTime);
+        needUpdateTime = false;
     }
 
     if (readSeconds() != raw_seconds)
         readTime();
 }
 
-void DS3231SetTime(DateTime value)
+void DS3231UpdateTime(DateTime value)
 {
-    DS3231_time_to_update = value;
-    DS3231_need_update_time = true;
-}
-
-DateTime DS3231GetTime()
-{
-    return DS3231_current_time;
-}
-
-bool DS3231TimeIsReady()
-{
-    return DS3231_time_is_ready;
+    newTime = value;
+    needUpdateTime = true;
 }
 
 void readTime()
 {
     uint8_t result[7];
-    if (I2CReadRegisters(DS3231_I2C_ADDR, 0, result, sizeof(result)) != sizeof(result))
+    if (!I2CReadRegisters(DS3231_I2C_ADDR, 0, result, sizeof(result)))
     {
         setError(ERROR_DS3231_NOT_FOUND);
         ESP_LOGE(DS3231_TAG, "DS3231 not answered");
         return;
     }
+    DateTime currentTime;
+    currentTime.second = BCDToDec(result[0]);
+    currentTime.minute = BCDToDec(result[1]);
+    currentTime.hour = BCDToDec(result[2]);
+    currentTime.dayOfWeek = BCDToDec(result[3]);
+    currentTime.date = BCDToDec(result[4]);
+    currentTime.month = BCDToDec(result[5] & 0x1F);
+    currentTime.year = BCDToDec(result[6]);
 
-    DS3231_current_time.second = BCDToDec(result[0]);
-    DS3231_current_time.minute = BCDToDec(result[1]);
-    DS3231_current_time.hour = BCDToDec(result[2]);
-    DS3231_current_time.dayOfWeek = BCDToDec(result[3]);
-    DS3231_current_time.date = BCDToDec(result[4]);
-    DS3231_current_time.month = BCDToDec(result[5] & 0x1F);
-    DS3231_current_time.year = BCDToDec(result[6]);
-    DS3231_time_is_ready = true;
-
-    if(DS3231TimeChangedHandler != nullptr)
-    {
-        DS3231TimeChangedHandler(DS3231_current_time);
-    }
+    TimeChangedHandler(currentTime);
 
     raw_seconds = result[0];
 
@@ -127,7 +91,7 @@ void readTime()
 uint8_t readSeconds()
 {
     uint8_t result;
-    if (I2CReadRegister(DS3231_I2C_ADDR, 0, &result) != 1)
+    if (!I2CReadRegister(DS3231_I2C_ADDR, 0, &result))
     {
         setError(ERROR_DS3231_NOT_FOUND);
         ESP_LOGE(DS3231_TAG, "DS3231 not answered");
@@ -148,7 +112,7 @@ bool trySetTime(DateTime time)
         0B10000000 | DecToBCD(time.month + 1),
         DecToBCD(time.year % 100)};
 
-    if (I2CWriteRegisters(DS3231_I2C_ADDR, 0, command, sizeof(command)) == sizeof(command))
+    if (I2CWriteRegisters(DS3231_I2C_ADDR, 0, command, sizeof(command)))
     {
         ESP_LOGI(DS3231_TAG, "Set time: %d.%d.%d %d %d:%d:%d", time.date, time.month + 1, time.year, time.dayOfWeek + 1, time.hour, time.minute, time.second);
         return true;

@@ -68,7 +68,7 @@ struct PD_msg_state_t {
 #define COPY_PDO(d, s)      do { d = s; } while (0)
 #endif
 
-#define T(name) static const char str_ ## name [] PROGMEM = #name
+#define PROGMEMNAME(name) static const char str_ ## name [] PROGMEM = #name
 
 static void handler_good_crc   (PD_protocol_t * p, uint16_t header, uint32_t * obj, PD_protocol_event_t * events);
 static void handler_goto_min   (PD_protocol_t * p, uint16_t header, uint32_t * obj, PD_protocol_event_t * events);
@@ -89,9 +89,9 @@ static bool responder_vender_def    (PD_protocol_t * p, uint16_t * header, uint3
 static bool responder_sink_cap_ext  (PD_protocol_t * p, uint16_t * header, uint32_t * obj);
 static bool responder_not_support   (PD_protocol_t * p, uint16_t * header, uint32_t * obj);
 
-T(C0); T(GoodCRC); T(GotoMin); T(Accept); T(Reject); T(Ping); T(PS_RDY); T(Get_Src_Cap);
-T(Get_Sink_Cap); T(DR_Swap); T(PR_Swap); T(VCONN_Swap); T(Wait); T(Soft_Rst); T(Dat_Rst); T(Dat_Rst_Cpt);
-T(NS); T(Get_Src_Ext); T(Get_Stat); T(FR_Swap); T(Get_PPS_Stat); T(Get_CC); T(Get_Sink_Ext); T(C_R);
+PROGMEMNAME(C0); PROGMEMNAME(GoodCRC); PROGMEMNAME(GotoMin); PROGMEMNAME(Accept); PROGMEMNAME(Reject); PROGMEMNAME(Ping); PROGMEMNAME(PS_RDY); PROGMEMNAME(Get_Src_Cap);
+PROGMEMNAME(Get_Sink_Cap); PROGMEMNAME(DR_Swap); PROGMEMNAME(PR_Swap); PROGMEMNAME(VCONN_Swap); PROGMEMNAME(Wait); PROGMEMNAME(Soft_Rst); PROGMEMNAME(Dat_Rst); PROGMEMNAME(Dat_Rst_Cpt);
+PROGMEMNAME(NS); PROGMEMNAME(Get_Src_Ext); PROGMEMNAME(Get_Stat); PROGMEMNAME(FR_Swap); PROGMEMNAME(Get_PPS_Stat); PROGMEMNAME(Get_CC); PROGMEMNAME(Get_Sink_Ext); PROGMEMNAME(C_R);
 
 static const struct PD_msg_state_t ctrl_msg_list[] PROGMEM = {
     {.name = str_C0,            .handler = 0,                   .responder = 0},
@@ -121,9 +121,9 @@ static const struct PD_msg_state_t ctrl_msg_list[] PROGMEM = {
     {.name = str_C_R,           .handler = 0,                   .responder = responder_not_support},
 };
 
-T(D0); T(Src_Cap); T(Request); T(BIST); T(Sink_Cap); T(Bat_Stat); T(Alert); T(Get_CI);
-T(Enter_USB); T(D9); T(D10); T(D11); T(D12); T(D13); T(D14); T(VDM);
-T(D_R); 
+PROGMEMNAME(D0); PROGMEMNAME(Src_Cap); PROGMEMNAME(Request); PROGMEMNAME(BIST); PROGMEMNAME(Sink_Cap); PROGMEMNAME(Bat_Stat); PROGMEMNAME(Alert); PROGMEMNAME(Get_CI);
+PROGMEMNAME(Enter_USB); PROGMEMNAME(D9); PROGMEMNAME(D10); PROGMEMNAME(D11); PROGMEMNAME(D12); PROGMEMNAME(D13); PROGMEMNAME(D14); PROGMEMNAME(VDM);
+PROGMEMNAME(D_R); 
 
 static const struct PD_msg_state_t data_msg_list[] PROGMEM = {
     {.name = str_D0,            .handler = 0,                   .responder = 0},
@@ -146,9 +146,9 @@ static const struct PD_msg_state_t data_msg_list[] PROGMEM = {
     {.name = str_D_R,           .handler = 0,                   .responder = responder_not_support},
 };
 
-T(E0); T(Src_Cap_Ext); T(Status); T(Get_Bat_cap); T(Get_Bat_Stat); T(Bat_Cap); T(Get_Mfg_Info); T(Mfg_Info);
-T(Sec_Request); T(Sec_Response); T(FU_request); T(FU_Response); T(PPS_Stat); T(Country_Info); T(Country_Code); T(Sink_Cap_Ext);
-T(E_R);
+PROGMEMNAME(E0); PROGMEMNAME(Src_Cap_Ext); PROGMEMNAME(Status); PROGMEMNAME(Get_Bat_cap); PROGMEMNAME(Get_Bat_Stat); PROGMEMNAME(Bat_Cap); PROGMEMNAME(Get_Mfg_Info); PROGMEMNAME(Mfg_Info);
+PROGMEMNAME(Sec_Request); PROGMEMNAME(Sec_Response); PROGMEMNAME(FU_request); PROGMEMNAME(FU_Response); PROGMEMNAME(PPS_Stat); PROGMEMNAME(Country_Info); PROGMEMNAME(Country_Code); PROGMEMNAME(Sink_Cap_Ext);
+PROGMEMNAME(E_R);
 
 static const struct PD_msg_state_t ext_msg_list[] PROGMEM = {
     {.name = str_E0,            .handler = 0,                   .responder = responder_not_support},

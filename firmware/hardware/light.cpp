@@ -5,7 +5,7 @@
 
 extern settings_t settings;
 
-void lightInit()
+void LightInit()
 {
     pinMode(LIGHT_ANALOG_PIN, ANALOG);
 

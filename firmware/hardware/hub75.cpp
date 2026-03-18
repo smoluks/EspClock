@@ -26,6 +26,7 @@ static HUB75_I2S_CFG mxconfig(
     60,                              // _min_refresh_rate
     2); // _pixel_color_depth_bits
 static uint8_t maximum_brigthness = 255;
+
 void HUB75Init()
 {
   ESP_LOGI(HUB75_TAG, "HUB75 init started");
@@ -47,6 +48,10 @@ void HUB75Init()
 
   if(!settings.light_auto)
     HUB75SetBrigthness(settings.light_level);
+
+  dmaDisplay->setTextColor(GREEN565);
+  dmaDisplay->setTextSize(1);
+  dmaDisplay->print("Loading...");
 
   ESP_LOGI(HUB75_TAG, "HUB75 init completed");
 }

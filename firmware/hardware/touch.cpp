@@ -46,6 +46,8 @@ void TouchInit()
     touch_pad_filter_start(10);
     touch_pad_set_trigger_mode(TOUCH_TRIGGER_MAX);
     touch_pad_set_filter_read_cb(filterFinishedCallback);
+
+    ESP_LOGI(TOUCH_TAG, "TouchInit done");
 }
 
 void TouchLoop()

@@ -381,24 +381,12 @@ void setPowerStatus(status_power_e status, uint16_t ready_voltage, uint16_t read
 
 inline FUSB302_ret_t FUSB302_i2c_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count)
 {
-  //ESP_LOGI(FUSB302_TAG, "Read addr: %X, count %d", reg_addr, count);
-
-  size_t result =  I2CReadRegisters(dev_addr, reg_addr, data, count);
-  
-  //ESP_LOGI(FUSB302_TAG, "Read finished");
-
-  return result == count ? FUSB302_SUCCESS : FUSB302_ERR_READ_DEVICE;
+  return I2CReadRegisters(dev_addr, reg_addr, data, count) ? FUSB302_SUCCESS : FUSB302_ERR_READ_DEVICE;
 }
 
 inline FUSB302_ret_t FUSB302_i2c_write(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint8_t count)
 {
-  //ESP_LOGI(FUSB302_TAG, "Write addr: %X, count %d", reg_addr, count);
-
-  size_t result =  I2CWriteRegisters(dev_addr, reg_addr, data, count);
-  
-  //ESP_LOGI(FUSB302_TAG, "Write finished");
-
-  return result == count ? FUSB302_SUCCESS : FUSB302_ERR_WRITE_DEVICE;
+  return I2CWriteRegisters(dev_addr, reg_addr, data, count) ? FUSB302_SUCCESS : FUSB302_ERR_WRITE_DEVICE;
 }
 
 inline FUSB302_ret_t FUSB302_delay_ms(uint32_t t)

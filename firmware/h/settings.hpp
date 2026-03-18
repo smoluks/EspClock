@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SETTINGS_HPP
+#define SETTINGS_HPP
 
 typedef struct settings_s
 {
@@ -13,9 +14,11 @@ typedef struct settings_s
 
     //NTP
     bool ntp_enable = true;
-    uint16_t ntp_timezone_offset = 3600; //in seconds
+    uint16_t ntp_timezone_offset = 7200; //in seconds
 
     //BTHome
-    uint8_t bthome_enable = true;
+    uint8_t bthome_enable = false;
     uint8_t bthome_sensor_addr[6] = {0x38, 0x1F, 0x8D, 0xFC, 0x36, 0x1D};
 } settings_t;
+
+#endif // SETTINGS_HPP

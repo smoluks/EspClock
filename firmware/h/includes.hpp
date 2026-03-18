@@ -19,7 +19,6 @@
 //hardware
 #include "../hardware/bleClient.cpp"
 #include "../hardware/bme280.cpp"
-#include "../hardware/btHomeV2.cpp"
 #include "../hardware/current.cpp"
 #include "../hardware/ds3231.cpp"
 #include "../hardware/dy1703.cpp"
@@ -31,7 +30,11 @@
 #include "../hardware/t6703.cpp"
 #include "../hardware/touch.cpp"
 #include "../hardware/voltage.cpp"
-#include "../hardware/wireless.cpp"
+#include "../hardware/wifi.cpp"
+//
+#include "../network/NTPClient.cpp"
+#include "../network/btHomeV2.cpp"
+#include "../network/timezonedb.cpp"
 //helpers
 #include "../helpers/unixTimeConverter.cpp"
 //managers

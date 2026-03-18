@@ -17,7 +17,7 @@ static uint8_t current_y;
 static int8_t speed_x;
 static int8_t speed_y;
 static bool clockScreenIsSingleTap;
-static const char* DaysOfWeek[] = { NULL, "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "MON", "SUN" };
+static const char *DaysOfWeek[] = {NULL, "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "MON", "SUN"};
 
 void clockScreenInit()
 {
@@ -49,49 +49,40 @@ screen_action_t clockScreenLoop()
 
     dmaDisplay->fillScreenRGB888(0, 0, 0);
 
-    if (!IsTimePresent())
-    {
-        dmaDisplay->setTextColor(GREEN565);
-        dmaDisplay->setTextSize(1);
-        dmaDisplay->print("Loading...");
-    }
-    else
-    {
-        DateTime currentTime = GetCurrentTime();
-        const char time[6] = {
-            0x30 + currentTime.hour / 10,
-            0x30 + currentTime.hour % 10,
-            ':',
-            0x30 + currentTime.minute / 10,
-            0x30 + currentTime.minute % 10,
-            0};
+    DateTime currentTime = GetCurrentTime();
+    const char time[6] = {
+        0x30 + currentTime.hour / 10,
+        0x30 + currentTime.hour % 10,
+        ':',
+        0x30 + currentTime.minute / 10,
+        0x30 + currentTime.minute % 10,
+        0};
 
-        //-----Time-----
-        moveCursor();
-        dmaDisplay->setTextColor(GREEN565);
-        dmaDisplay->setTextSize(2);
-        dmaDisplay->print(time);
+    //-----Time-----
+    moveCursor();
+    dmaDisplay->setTextColor(GREEN565);
+    dmaDisplay->setTextSize(2);
+    dmaDisplay->print(time);
 
-        //-----Week day-----
-        dmaDisplay->setCursor(0, 25);
-        dmaDisplay->setTextColor(BLUE565);
-        dmaDisplay->setTextSize(1);
-        dmaDisplay->print(DaysOfWeek[currentTime.dayOfWeek]);
+    //-----Week day-----
+    dmaDisplay->setCursor(0, 25);
+    dmaDisplay->setTextColor(BLUE565);
+    dmaDisplay->setTextSize(1);
+    dmaDisplay->print(DaysOfWeek[currentTime.dayOfWeek]);
 
-        //-----Date-----
-        const char date[6] = {
-            0x30 + currentTime.date / 10,
-            0x30 + currentTime.date % 10,
-            '.',
-            0x30 + currentTime.month / 10,
-            0x30 + currentTime.month % 10,
-            0};
+    //-----Date-----
+    const char date[6] = {
+        0x30 + currentTime.date / 10,
+        0x30 + currentTime.date % 10,
+        '.',
+        0x30 + currentTime.month / 10,
+        0x30 + currentTime.month % 10,
+        0};
 
-        dmaDisplay->setCursor(34, 25);
-        dmaDisplay->setTextColor(RED565);
-        dmaDisplay->setTextSize(1);
-        dmaDisplay->print(date);
-    }
+    dmaDisplay->setCursor(34, 25);
+    dmaDisplay->setTextColor(RED565);
+    dmaDisplay->setTextSize(1);
+    dmaDisplay->print(date);
 
     //-----CO2 Warning-----
     if (IsCO2Present())

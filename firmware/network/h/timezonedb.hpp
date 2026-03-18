@@ -1,0 +1,1 @@
+bool GetTimezoneInfo(uint32_t* gmtOffset);

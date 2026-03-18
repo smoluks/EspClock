@@ -1,12 +1,12 @@
 #include "h/i2c.hpp"
 #include "h/T6703.hpp"
+#include "../managers/h/errorManager.hpp"
 
 static const char *T6703 = "T6703";
 
 PT_THREAD(T6703checkStatus());
 PT_THREAD(T6703read());
 
-void (*T6703ValueHandler)(uint16_t value);
 static bool t6703_pt_finised;
 inline void T6703Init()
 {
@@ -15,34 +15,36 @@ inline void T6703Init()
     I2CSetSpeed(100000);
 
     //-----Waiting status OK------
-    int32_t status;
-    bool is_resetted;
+    uint16_t data;
+    uint8_t count = 0;
     do
     {
-        status = ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_STATUS);
-        if(status == -1)
-        {     
-            //i2c operation failed
-            if(is_resetted)
-            {
-                I2CSetSpeed(400000);
-                t6703_pt_finised = true;
-                return;
-            }
-            else
-            {
-                ModbusOverI2CWriteSingleCoil(T67XX_I2C_ADDR, T67XX_REG_RESET, true);
-                delay(15);
-                is_resetted = true;
-            }
+        if (ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_STATUS, &data))
+        {
+            break;
         }
-    } while (status < 0);
+
+        count++;
+        delay(15);
+        ModbusOverI2CWriteSingleCoil(T67XX_I2C_ADDR, T67XX_REG_RESET, true);
+        delay(15);
+
+    } while (count < 3);
+    if (count == 3)
+    {
+        setError(ERROR_T6703_NOT_FOUND);
+        t6703_pt_finised = true;
+        ESP_LOGE(T6703, "T6703 not found");
+        I2CSetSpeed(400000);
+        return;
+    }
 
     //-----Setup sensor------
-    ModbusOverI2CWriteSingleCoil(T67XX_I2C_ADDR, T67XX_REG_ABC_LOGIC, true);
+    ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_STATUS, &data);
+    ESP_LOGI(T6703, "status: 0x%X", data);
 
-    //
-    ESP_LOGI(T6703, "T6703 init completed, firmware version: %d", ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_FIRMWARE));
+    ModbusOverI2CRead(T67XX_I2C_ADDR, T67XX_REG_FIRMWARE, &data);
+    ESP_LOGI(T6703, "T6703 init completed, firmware version: %d", data);
 
     I2CSetSpeed(400000);
 }
@@ -80,7 +82,7 @@ PT_THREAD(T6703read())
 
     I2CSetSpeed(100000);
 
-    if (I2CWriteBulk(T67XX_I2C_ADDR, t6703_read_command, 5) != 5)
+    if (!I2CWriteBuffer(T67XX_I2C_ADDR, t6703_read_command, 5))
     {
         ESP_LOGW(T6703, "T6703 write co2 command failed");
         I2CSetSpeed(400000);
@@ -101,7 +103,7 @@ PT_THREAD(T6703read())
 
     I2CSetSpeed(100000);
 
-    if (I2CReadBulk(T67XX_I2C_ADDR, t6703_answer, 4) != 4)
+    if (!I2CReadBuffer(T67XX_I2C_ADDR, t6703_answer, 4))
     {
         ESP_LOGW(T6703, "T6703 read co2 result failed");
         I2CSetSpeed(400000);
@@ -109,10 +111,7 @@ PT_THREAD(T6703read())
         return PT_WAITING;
     }
 
-    if(T6703ValueHandler != nullptr)
-    {
-        T6703ValueHandler((t6703_answer[2] << 8) | t6703_answer[3]);
-    }
+    co2ChangedHandler((t6703_answer[2] << 8) | t6703_answer[3]);
 
     I2CSetSpeed(400000);
 
@@ -132,7 +131,7 @@ PT_THREAD(T6703checkStatus())
     ESP_LOGV(T6703, "write read status command");
 
     I2CSetSpeed(100000);
-    if (I2CWriteBulk(T67XX_I2C_ADDR, t6703_read_command, 5) != 5)
+    if (!I2CWriteBuffer(T67XX_I2C_ADDR, t6703_read_command, 5))
     {
         ESP_LOGW(T6703, "T6703 write status command failed");
         I2CSetSpeed(400000);
@@ -152,7 +151,7 @@ PT_THREAD(T6703checkStatus())
 
     I2CSetSpeed(100000);
 
-    if (I2CReadBulk(T67XX_I2C_ADDR, t6703_answer, 4) != 4)
+    if (!I2CReadBuffer(T67XX_I2C_ADDR, t6703_answer, 4))
     {
         ESP_LOGW(T6703, "T6703 read status result failed");
         I2CSetSpeed(400000);
@@ -169,4 +168,3 @@ PT_THREAD(T6703checkStatus())
 
     PT_END(&t6703_status_pt);
 }
-

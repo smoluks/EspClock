@@ -6,11 +6,12 @@
 #include "../screens/h/screenCommon.hpp"
 #include "../managers/h/errorManager.hpp"
 #include "h/screenManager.hpp"
+#include <controllers/h/clock.hpp>
 
 // screen handlers
 static enum screens_e
 {
-    no = 0,
+    ScreenNo = 0,
     timeScreen,
     sensorsScreen,
     errorScreen,
@@ -62,11 +63,14 @@ void screenManagerLoop()
 // check logic condition for changing screen
 void checkChangeConditions()
 {    
-    if (current_screen == no)
-        moveToScreen(timeScreen);
-
-    if (isErrors())
+    
+    if (current_screen != errorScreen && isErrors()){
         moveToScreen(errorScreen);
+        return;
+    }
+
+    if (current_screen == ScreenNo && IsTimePresent())
+        moveToScreen(timeScreen);
 }
 
 void moveToScreen(enum screens_e screen)

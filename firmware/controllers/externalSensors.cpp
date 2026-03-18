@@ -1,4 +1,4 @@
-#include "../hardware/h/btHomeV2.hpp"
+#include "../network/h/btHomeV2.hpp"
 #include "h/externalSensors.hpp"
 #include "../h/settings.hpp"
 

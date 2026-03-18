@@ -1,82 +1,77 @@
 #include "h/includes.hpp"
-//#include "esp_clk.h"
+// #include "esp_clk.h"
 
-TaskHandle_t i2cTaskHandler;
-uint32_t firmware_loop_timestamp;
+static const char *FIRMWARE_TAG = "firmware";
 
 void setup()
 {
-  //Serial.setTxBufferSize(1024);
   Serial.begin(DEBUG_SPEED);
   Serial.setDebugOutput(true);
 
-  ESP_LOGI("firmware", "setup() running on core %d", xPortGetCoreID());
-  ESP_LOGI("firmware", "CPU frequency: %d MHz, XTAL frequency: %d MHz, APB frequency: %d MHz", getCpuFrequencyMhz(), getXtalFrequencyMhz(), getApbFrequency() / 1000000);
-  ESP_LOGI("firmware", "ESP32 chip model = %s Rev %d, has %d cores", ESP.getChipModel(), ESP.getChipRevision(), ESP.getChipCores());
-  ESP_LOGI("firmware", "Free heap: %dB", esp_get_free_heap_size());
+  I2CTaskInit();
+
+  ESP_LOGI(FIRMWARE_TAG, "setup() running on core %d", xPortGetCoreID());
+  ESP_LOGI(FIRMWARE_TAG, "CPU frequency: %d MHz, XTAL frequency: %d MHz, APB frequency: %d MHz", getCpuFrequencyMhz(), getXtalFrequencyMhz(), getApbFrequency() / 1000000);
+  ESP_LOGI(FIRMWARE_TAG, "ESP32 chip model = %s Rev %d, has %d cores", ESP.getChipModel(), ESP.getChipRevision(), ESP.getChipCores());
+  ESP_LOGI(FIRMWARE_TAG, "Free heap: %dB", esp_get_free_heap_size());
   uint32_t chipId = 0;
   for (int i = 0; i < 17; i = i + 8)
   {
     chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
   }
-  ESP_LOGI("firmware", "Chip ID: 0x%X", chipId);
-
-  voltageInit();
-  CurrentInit();
-
-  PowerInit();
-  ClockInit();
-  CO2Init();
-  
-  I2CInit();
-  FUSB302Init();
-  xTaskCreatePinnedToCore(
-      i2cTask,
-      "i2cTask",
-      2048,
-      NULL,
-      0,
-      &i2cTaskHandler,
-      1);
-
-  loadSettings();
-
-  TouchInit();
-  lightInit();
-  DY1703Init();
-  WirelessInit();
-  
-  ExternalSensorsInit();
+  ESP_LOGI(FIRMWARE_TAG, "Chip ID: 0x%X", chipId);
 
   HUB75Init();
- 
-  ESP_LOGI("main", "Init complete");
+
+  VoltageInit();
+  CurrentInit();
+  LightInit();
+
+  // DY1703Init();
+  //  LoadSettings();
+
+  TouchInit();
+
+  WifiInit();
+
+  // ExternalSensorsInit();
+
+  ESP_LOGI(FIRMWARE_TAG, "setup() complete");
 }
 
-uint32_t free_heap_size = 10000;
+timestamp_uS_t firmwareLoopTimestamp;
+uint32_t freeHeapSizeWarning = 10000;
 void loop()
 {
-  // if (getTimePassedFrom(firmware_loop_timestamp) > 10)
-  //   ESP_LOGW("firmware", "loop() interval %d ms", getTimePassedFrom(firmware_loop_timestamp));
-  // firmware_loop_timestamp = millis();
-
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-  uint32_t current_free_heap_size = esp_get_free_heap_size();
-  if(current_free_heap_size < free_heap_size)
+
+  if (!firmwareLoopTimestamp)
   {
-     free_heap_size = current_free_heap_size;
-     ESP_LOGE("firmware", "Free RAM: %d bytes", current_free_heap_size);
+    ESP_LOGI(FIRMWARE_TAG, "loop() running on core %d", xPortGetCoreID());
+  }
+  else if (GetTimestamp() - firmwareLoopTimestamp > 10000)
+  {
+    ESP_LOGW(FIRMWARE_TAG, "loop() interval %d us", GetTimestamp() - firmwareLoopTimestamp);
+  }
+  firmwareLoopTimestamp = GetTimestamp();
+
+  uint32_t current_free_heap_size = esp_get_free_heap_size();
+  if (current_free_heap_size < freeHeapSizeWarning)
+  {
+    freeHeapSizeWarning = current_free_heap_size;
+    ESP_LOGE(FIRMWARE_TAG, "Free heap: %d bytes", current_free_heap_size);
   }
 #endif
 
   CheckPowerLimit();
-  
-  lightLoop();
-  voltageLoop();
-  TouchLoop();
 
-  ExternalSensorsLoop();
-  
+  lightLoop();
+  VoltageLoop();
+  TouchLoop();
+  ClockLoop();
+
+  // ExternalSensorsLoop();
+
   screenManagerLoop();
 
   delay(1); // Do esp32 internal stuff

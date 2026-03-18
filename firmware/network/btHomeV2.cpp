@@ -3,8 +3,8 @@
 
 #include <esp_gatt_defs.h>
 #include "../h/settings.hpp"
-#include "h/systick.hpp"
-#include "h/bleClient.hpp"
+#include "../hardware/h/systick.hpp"
+#include "../hardware/h/bleClient.hpp"
 #include "h/btHomeV2.hpp"
 
 #define BTHOME_CONNECTION_PERIOD_US 60 * 1000 * 1000 // BLE stack connection timeout 30S, so it's practical to use greater value

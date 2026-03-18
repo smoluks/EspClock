@@ -8,6 +8,7 @@ timekeeper interrupt for reading new time
 mic
 move esp from touch side
 loop indication led
+jack?
 
 accumulator feature:
 investigate 3.3v step-down working from 3.6V Li-Ion accumulator voltage

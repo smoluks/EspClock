@@ -3,14 +3,18 @@
 
 static const char *VOLTAGE_TAG = "Voltage";
 
-void voltageInit()
+void VoltageInit()
 {
+    ESP_LOGI(VOLTAGE_TAG, "Voltage init");
+
     pinMode(VOLTAGE_PIN, ANALOG);
+
+    ESP_LOGI(VOLTAGE_TAG, "Voltage init done");
 }
 
 static uint32_t voltage_raw = 0;
 static uint8_t voltage_count = 0;
-void voltageLoop()
+void VoltageLoop()
 {
     voltage_raw += analogRead(VOLTAGE_PIN);
     if(++voltage_count < 64)
